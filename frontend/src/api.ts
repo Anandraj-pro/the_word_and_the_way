@@ -98,4 +98,9 @@ export const api = {
     http<CrossResult>("/seasons/cross", { method: "POST", body: JSON.stringify(body) }),
   confessions: () => http<ConfessionSummary[]>("/confessions"),
   confession: (slug: string) => http<Confession>(`/confessions/${slug}`),
+  searchConfessions: (q: string, n = 5) =>
+    http<ConfessionSummary[]>("/confessions/search", {
+      method: "POST",
+      body: JSON.stringify({ q, n }),
+    }),
 };

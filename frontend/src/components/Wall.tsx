@@ -1,26 +1,62 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { api, type Confession, type ConfessionSummary, type Encounter } from "../api";
 import { Station } from "./Station";
 
 interface WallProps {
-  declarations: Encounter[]; // the Pastor's own words, proclaimed
-  confessions: ConfessionSummary[]; // the inherited corpus
+  declarations: Encounter[];
+  confessions: ConfessionSummary[];
 }
 
 /**
- * The Wall — Declare. The Pastor's own proclamations sit above the inherited
- * confessions corpus; any confession opens into a scroll to be read aloud.
+ * The Wall — Declare. Type to filter by title instantly; press Enter to
+ * search by meaning (RAG semantic search via ChromaDB + Ollama).
  */
 export function Wall({ declarations, confessions }: WallProps) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState<Confession | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const filtered = useMemo(() => {
+  const [semanticResults, setSemanticResults] = useState<ConfessionSummary[] | null>(null);
+  const [searching, setSearching] = useState(false);
+  const [searchedQuery, setSearchedQuery] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const titleFiltered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return confessions;
     return confessions.filter((c) => c.title.toLowerCase().includes(q));
   }, [confessions, query]);
+
+  const isSemanticMode = semanticResults !== null;
+  const displayList = isSemanticMode ? semanticResults : titleFiltered;
+
+  const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      const q = query.trim();
+      if (!q) return;
+      setSearching(true);
+      setSearchedQuery(q);
+      try {
+        const results = await api.searchConfessions(q, 10);
+        setSemanticResults(results);
+      } finally {
+        setSearching(false);
+      }
+    }
+    if (e.key === "Escape") clearSearch();
+  };
+
+  const clearSearch = () => {
+    setSemanticResults(null);
+    setSearchedQuery("");
+    setQuery("");
+    inputRef.current?.focus();
+  };
+
+  const handleQueryChange = (value: string) => {
+    setQuery(value);
+    if (semanticResults !== null) setSemanticResults(null);
+  };
 
   const unroll = async (c: ConfessionSummary) => {
     setLoading(true);
@@ -65,31 +101,88 @@ export function Wall({ declarations, confessions }: WallProps) {
               <p className="text-xs uppercase tracking-[0.25em] text-stone/70">
                 Confessions
               </p>
-              <span className="text-xs text-stone/60">{confessions.length}</span>
+              <span className="text-xs text-stone/60">
+                {isSemanticMode ? `${displayList.length} found` : confessions.length}
+              </span>
             </div>
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Find a confession…"
-              className="mb-2 w-full border-b border-stone/30 bg-transparent pb-1 font-serif text-sm text-ink placeholder:text-stone/55 focus:border-terracotta focus:outline-none"
-            />
-            <ul className="flex max-h-72 flex-col overflow-y-auto">
-              {filtered.map((c) => (
-                <li key={c.id}>
-                  <button
-                    onClick={() => unroll(c)}
-                    className="w-full border-b border-stone/15 py-1.5 text-left font-serif text-sm text-ink/90 transition-colors hover:text-terracotta-deep"
-                  >
-                    {c.title}
-                  </button>
-                </li>
-              ))}
-              {filtered.length === 0 && (
-                <li className="py-2 text-sm italic text-stone">
-                  No confession by that name.
-                </li>
+
+            {/* Search input */}
+            <div className="relative mb-1">
+              <input
+                ref={inputRef}
+                value={query}
+                onChange={(e) => handleQueryChange(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Find a confession… or describe a need"
+                className="w-full border-b border-stone/30 bg-transparent pb-1 pr-6 font-serif text-sm text-ink placeholder:text-stone/45 focus:border-terracotta focus:outline-none"
+              />
+              {query && (
+                <button
+                  onClick={clearSearch}
+                  aria-label="Clear"
+                  className="absolute right-0 top-0 text-stone/50 transition-colors hover:text-terracotta"
+                >
+                  ✕
+                </button>
               )}
-            </ul>
+            </div>
+
+            {/* Mode label */}
+            {isSemanticMode ? (
+              <div className="mb-2 flex items-center gap-2">
+                <span className="text-xs italic text-terracotta">
+                  By meaning — "{searchedQuery}"
+                </span>
+                <button
+                  onClick={clearSearch}
+                  className="text-xs text-stone/60 underline underline-offset-2 transition-colors hover:text-terracotta"
+                >
+                  browse all
+                </button>
+              </div>
+            ) : query.trim() ? (
+              <p className="mb-2 text-xs italic text-stone/50">
+                Press Enter to search by meaning
+              </p>
+            ) : null}
+
+            {searching && (
+              <p className="animate-pulse py-2 text-sm italic text-stone/70">
+                Searching the Wall…
+              </p>
+            )}
+
+            {!searching && (
+              <ul className="flex max-h-72 flex-col overflow-y-auto">
+                {displayList.map((c, i) => (
+                  <li key={c.id}>
+                    <button
+                      onClick={() => unroll(c)}
+                      className="group w-full border-b border-stone/15 py-1.5 text-left transition-colors hover:text-terracotta-deep"
+                    >
+                      <span className="font-serif text-sm text-ink/90 group-hover:text-terracotta-deep">
+                        {isSemanticMode && (
+                          <span className="mr-1.5 font-display text-xs text-terracotta/60">
+                            {i + 1}.
+                          </span>
+                        )}
+                        {c.title}
+                      </span>
+                      {isSemanticMode && c.refs.length > 0 && (
+                        <span className="ml-2 text-xs text-stone/50">
+                          {c.refs.slice(0, 2).join(" · ")}
+                        </span>
+                      )}
+                    </button>
+                  </li>
+                ))}
+                {displayList.length === 0 && (
+                  <li className="py-2 text-sm italic text-stone">
+                    {isSemanticMode ? "Nothing matched on the Wall." : "No confession by that name."}
+                  </li>
+                )}
+              </ul>
+            )}
           </div>
         )}
       </div>
@@ -121,14 +214,27 @@ export function Wall({ declarations, confessions }: WallProps) {
                   </button>
                 </div>
                 <div className="flex flex-col gap-3">
-                  {open.body.split(/\n{2,}/).map((para, i) => (
-                    <p
-                      key={i}
-                      className="whitespace-pre-line font-serif text-[1.05rem] leading-relaxed text-ink"
-                    >
-                      {para}
-                    </p>
-                  ))}
+                  {open.body.split(/\n{2,}/).map((para, i) => {
+                    const h1 = para.match(/^#\s+(.+)/);
+                    const h2 = para.match(/^##\s+(.+)/);
+                    if (h2)
+                      return (
+                        <p key={i} className="font-display text-base uppercase tracking-widest text-stone">
+                          {h2[1]}
+                        </p>
+                      );
+                    if (h1)
+                      return (
+                        <p key={i} className="font-display text-lg text-terracotta-deep">
+                          {h1[1]}
+                        </p>
+                      );
+                    return (
+                      <p key={i} className="whitespace-pre-line font-serif text-[1.05rem] leading-relaxed text-ink">
+                        {para}
+                      </p>
+                    );
+                  })}
                 </div>
                 {open.refs.length > 0 && (
                   <div className="mt-6 border-t border-stone/25 pt-4">
