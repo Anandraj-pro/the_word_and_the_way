@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+/* Ember & Stone design tokens — the room's whole palette and voice. */
+@theme {
+  --color-terracotta: #c4643d;
+  --color-terracotta-deep: #a44a28;
+  --color-stone: #8b6b5a;
+  --color-linen: #f0ebe4;
+  --color-linen-deep: #e4dccf;
+  --color-ink: #2c2420;
+
+  --font-display: "Abril Fatface", serif;
+  --font-serif: "Source Serif 4", Georgia, serif;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-ink);
+  color: var(--color-ink);
+  font-family: var(--font-serif);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The slow stillness of stone — used for promises settling onto the Altar. */
+@keyframes settle {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.settle {
+  animation: settle 700ms ease-out both;
+}

@@ -1,0 +1,15 @@
+# Prayer For A Teenager
+
+Taken from pages 241-243 of Prayers That Avail Much Commemorative Gift Edition, ã 1997 by Word Ministries, Inc. 
+Taken from pages 439-441 of Prayers That Avail Much Commemorative Gift Edition, ã 1997 by Word Ministries, Inc. 
+Prayer for a Teenager 
+Father, in the Name of Jesus, I affirm Your Word over my teenager. I commit him/her to you and delight myself also in You. I thank You that You deliver out of rebellion into right relationship with his/her parents. 
+Father, the first commandment with a promise is to the child who obeys his parents in the Lord. You said that all will be well with him and he will live long on the earth. I affirm this promise on behalf of my child asking You to give him an obedient spirit that he may honor (esteem and value as precious) those in right authority over him. 
+Father, forgive me for mistakes I made out of my own unresolved hurts or selfishness which may have caused him hurt. I release the anointing that is upon Jesus to bind up and heal our broken hearts. Give us the ability to understand and forgive one another as God for Christ's sake has forgiven us. Thank You for the Holy Spirit Who leads us into all truth and corrects erroneous perceptions about past or present situations. 
+Thank You for teaching us to listen to each other and giving him an ear that hears admonition for then he will be called wise. I affirm that I will speak excellent and princely things and the opening of my lips shall be for right things. Father, I commit to train and teach him in the way that he is to go and when he is old he will not depart from sound doctrine and teaching, but will follow it all the days of his life. In the Name of Jesus, I command rebellion to be far from the heart of my teenager and confess that he is willing and obedient, free to enjoy the reward of Your promises. He shall be peaceful bringing peace to others. 
+Father, according to Your Word we have been given the ministry of reconciliation and I release this ministry and the word of reconciliation into this family situation. I refuse to provoke or irritate or fret my child. I will not be hard on him lest he becomes discouraged, feeling inferior and frustrated. I will not break his spirit in the name of Jesus and by the power of the Holy Spirit. Father, I forgive my teenager for the wrongs which he has done and stand in the gap until he comes to his senses and escapes out of the snare of the enemy (rebellion). Thank You for watching over Your Word to perform it, turning and reconciling the heart of the rebellious child to the parents and the hearts of the parents to the child. Thank You for bringing my teenager back into a healthy relationship with You and with me that our lives might glorify You! 
+In Jesus' Name, Amen. 
+Scripture References: 
+Psalm 55:12-14  1 Peter 5:7  Psalm 37:4  John 14:6  Ephesians 6:1-3  1 John 1:9  Isaiah 61:1 
+John 16:13  Proverbs 15:31  Proverbs 13:1  Proverbs 8:6,7  Proverbs 22:6  Isaiah 1:19  Isaiah 54:13 
+2 Corinthians 5:18,19  Colossians 3:21  John 20:23  Ezekiel 22:30  Jeremiah 1:12  Malachi 4:6

@@ -1,0 +1,8 @@
+# Prayer Of Dedication Consec
+
+Prayer of Dedication, Consecration, and Submission 
+Father, I pray the Prayer of Dedication, Consecration, and Submission. In every area of my life, I belong to You. Father, I’ll go where you want me to go, I’ll do what you want me to do. Not my will, but your will be done. Thank you, Father that you work in me both to will and to do of your good pleasure. You have a good plan for my life, a plan of peace and joy. 
+Father, what you want and what you desire is what I want; that is what I desire. Not my will, but your will for my life every day, Father. Not my own way, not the way of the flesh, but the way of the Spirit. Father, your will, your plan, your way. 
+Father, I dedicate my life to you in every area. You have a plan for me in every area of life. Thank you, Father, for the joy of obedience. I will obey you with joy. Father, I want to have the spirit of obedience in my life, not rebellion or pride, not resistance or hard-heartedness, but a soft, sensitive heart that is willing to do anything. 
+I rebuke rebellion and stubbornness in Jesus’ Name. Father, I say before your presence that I am willing to do anything you want me to do. No matter what man says, no matter what the world says, you have found a willing person. You have found an obedient person. 
+Father, I will do what you say all the way, just the way you say it, no more and no less, and with joy. Thank you, Father, for the spirit of faith and the spirit of obedience. And Father, thank you that your will will be fulfilled in my life to your glory. In Jesus’ Name, Amen.

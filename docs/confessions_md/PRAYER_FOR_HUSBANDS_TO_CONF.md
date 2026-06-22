@@ -1,0 +1,11 @@
+# Prayer For Husbands To Conf
+
+Prayer for Husbands to Confess
+Father, in the Name of Jesus, I take Your Word and confess this day that I hearken to Your wisdom. My wife and I dwell securely in confident trust, and we are without fear or dread of evil. I make my ears attentive to skillful and godly wisdom, inclining and directing my heart and mind to understanding. I apply all of my power to the quest of wisdom and understanding. 
+I let not mercy, kindness and truth forsake me. I bind them about my neck and write them on the tablet of my heart. I prize the wisdom of God highly and exalt her. She will exalt and promote me, bringing me honor because I embrace her. For You, Lord, are my confidence, firm and strong, and You keep my foot from being caught in a trap or hidden danger. 
+Where I go, the Word of God shall lead me. When I sleep, it shall keep me. When I awaken, it shall talk to me. Therefore, I will speak excellent and princely things, and the opening of my lips shall be for right things. All the words of my mouth are righteous - upright and in right standing with God - and there is nothing contrary to truth or crooked in them. 
+I live considerately with my wife, with an intelligent recognition of our marriage relationship. I honor my wife as physically the weaker. However, I realize that we are joint-heirs to the throne with Jesus spiritually. I do this in order that our prayers will not be hindered or cut off. 
+I confess that my wife and I are of one and the same mind, united in spirit, compassionate and courteous, tenderhearted and humble minded. I believe for our welfare, happiness, and protection, because we love and respect each other. 
+Father, thank You that we are a couple of good report, that we are successful in everything we set our hands to. We are uncompromisingly righteous. We capture human lives for You as fishers of men. As we do this, we are confident that You are the Lord God Who teaches us to profit and leads us in the way we should go. We are abundantly supplied, with every need met, in the Name of Jesus. We have obtained the favor of the Lord, and the will of God is done in our lives and in our children's lives. 
+Scripture References: 
+Proverbs 1:33  Proverbs 3:3  Proverbs 3:26  Proverbs 8:6,8  Proverbs 11:30  Proverbs 2:2  Proverbs 4:8  Proverbs 6:22  1 Peter 3:7-9  Isaiah 48:17

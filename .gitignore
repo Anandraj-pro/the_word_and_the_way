@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+*.egg-info/
+
+# Database & vector store (runtime data, not source)
+backend/the_word_and_the_way.db
+backend/chroma_db/
+
+# Raw source files (binary originals — large, not code)
+docs/confessions_raw/
+
+# OS
+.DS_Store

@@ -1,0 +1,10 @@
+# Overcoming Infidelity
+
+Overcoming Infidelity 
+Father, I thank you that You hear my prayer, for I come in the Name of Jesus and on the authority of Your Word. I come boldly to the throne of grace to receive mercy and find grace to help in my time of need. I take my place - standing in the gap - against the devil and his demons until the salvation and deliverance of God is manifested in my marriage and life. Father, I forgive all of those individuals who I may be holding in unforgiveness. I forgive them for their sins and any wrong they may have done toward me and I stand firm knowing that the Holy Spirit will convict and convince them of sin, righteousness and judgment. 
+I am sane, sober-minded, temperate, and disciplined. I love my husband and my family and I confine myself to them. I am self-controlled, chaste, good-natured, and kindhearted, adapting and subordinating myself to my husband, that the Word of God may not be exposed to reproach - blasphemed or discredited. 
+In a similar way, I confess that my husband is self-restrained, prudent and he takes life seriously. He drinks waters out of his own cistern [of a pure marriage relationship], and fresh running waters out of his own well - lest his offsprings be dispersed abroad as waterbrooks in the street. He confines himself to his own wife, and their children will be for them alone and not the children of strangers with them. His fountain of human life is blessed with the rewards of fidelity, and he rejoices with the wife of his youth. He lets his wife be to him as the loving hind and pleasant doe [tender, gentle, and attractive]. He lets her bosom satisfy him at all times; and he is transported with the delight in her love. 
+My husband submits himself to Christ, Who is the head of the man. My husband is my head and we are subject one to the other out of reverence for Christ. 
+Thank you, Father, for hearing my prayer on behalf of my marriage. I know that You watch over Your Word to perform it, in Jesus' Name. Amen. 
+Scripture References: 
+Titus 2:4-6  Proverbs 5:15-19  Hebrews 9:14  1 Corinthians 11:3  Ephesians 5:21  Jeremiah 1:12
