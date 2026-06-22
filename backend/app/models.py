@@ -13,6 +13,7 @@ import enum
 from datetime import date, datetime
 
 from sqlalchemy import (
+    Boolean,
     Date,
     DateTime,
     Enum,
@@ -90,6 +91,85 @@ class Confession(Base):
     @property
     def refs(self) -> list[str]:
         return [r for r in (self.scripture_refs or "").splitlines() if r.strip()]
+
+
+class ScriptureCache(Base):
+    """Verses fetched for the Desk lookup, kept so a once-seen verse reads even offline.
+
+    Keyed by a normalized `reference` (lowercased reference + translation) so repeats
+    are served locally without calling out again.
+    """
+
+    __tablename__ = "scripture_cache"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    reference: Mapped[str] = mapped_column(String(160), unique=True, index=True)  # cache key
+    display_reference: Mapped[str | None] = mapped_column(String(160), default=None)
+    text: Mapped[str] = mapped_column(Text)
+    # Per-verse breakdown as JSON ([{verse, text}, …]) for the book reader. Null for
+    # rows cached before the reader existed; backfilled on first passage lookup.
+    verses_json: Mapped[str | None] = mapped_column(Text, default=None)
+    translation: Mapped[str] = mapped_column(String(40))
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+class ReadingPlanEntry(Base):
+    """One day's passage in the reading plan — the room's daily Bible-reading rhythm.
+
+    An ordered list of references; `day_index` is the position, not a calendar date, so a
+    missed day never skips a passage — you simply read the next one you haven't finished.
+    """
+
+    __tablename__ = "reading_plan"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    day_index: Mapped[int] = mapped_column(Integer, unique=True, index=True)  # 1-based order
+    reference: Mapped[str] = mapped_column(String(120))
+
+
+class ReadingLog(Base):
+    """A completed reading — what was read, on which calendar day, and the word it became."""
+
+    __tablename__ = "reading_log"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    day_index: Mapped[int] = mapped_column(Integer, index=True)
+    reference: Mapped[str] = mapped_column(String(120))
+    completed_on: Mapped[date] = mapped_column(Date, default=date.today, index=True)
+    encounter_id: Mapped[int | None] = mapped_column(
+        ForeignKey("encounters.id"), default=None
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+class PrayerFocus(Base):
+    """A standing thing prayed over — the daily watch. The other half of the founding intent.
+
+    `kind` is "standard" (the seeded church / pastors / kingdom foci) or "personal" (the
+    Pastor's own). Distinct from the Encounter spine: prayer is a discipline logged, not a
+    word received.
+    """
+
+    __tablename__ = "prayer_focuses"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    label: Mapped[str] = mapped_column(String(160))
+    kind: Mapped[str] = mapped_column(String(20), default="personal")  # standard | personal
+    scripture: Mapped[str | None] = mapped_column(String(120), default=None)  # a verse to pray
+    sort_order: Mapped[int] = mapped_column(Integer, default=0)
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+class PrayerLog(Base):
+    """One day a focus was prayed over. Consecutive days form the watch's streak."""
+
+    __tablename__ = "prayer_log"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    focus_id: Mapped[int] = mapped_column(ForeignKey("prayer_focuses.id"), index=True)
+    prayed_on: Mapped[date] = mapped_column(Date, default=date.today, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 
 class Encounter(Base):

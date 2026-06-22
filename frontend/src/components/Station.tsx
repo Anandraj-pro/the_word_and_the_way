@@ -21,14 +21,19 @@ export function Station({
 }: StationProps) {
   return (
     <section
-      className={`flex flex-col rounded-sm border border-stone/20 bg-linen/95 p-6 transition-opacity ${
-        empty ? "opacity-50" : "opacity-100"
+      className={`relative flex h-full flex-col overflow-hidden rounded-sm border border-stone/15 bg-linen p-6 shadow-[0_24px_50px_-32px_rgba(0,0,0,0.85)] transition-opacity ${
+        empty ? "opacity-60" : "opacity-100"
       } ${className}`}
     >
-      <header className="mb-4 border-b border-stone/20 pb-2">
-        <h2 className="font-display text-2xl tracking-wide text-ink">{label}</h2>
+      {/* A hairline of warmth along the top edge — light catching the furniture. */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-terracotta/30 to-transparent"
+      />
+      <header className="mb-4 flex items-baseline justify-between gap-3 border-b border-stone/20 pb-2.5">
+        <h2 className="font-display text-2xl leading-none tracking-wide text-ink">{label}</h2>
         {subtitle && (
-          <p className="mt-0.5 text-xs uppercase tracking-[0.2em] text-stone">
+          <p className="text-[0.65rem] uppercase tracking-[0.25em] text-stone">
             {subtitle}
           </p>
         )}
@@ -38,7 +43,7 @@ export function Station({
           {emptyWord ?? "Nothing here yet."}
         </p>
       ) : (
-        children
+        <div className="flex min-h-0 flex-1 flex-col">{children}</div>
       )}
     </section>
   );

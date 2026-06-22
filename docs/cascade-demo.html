@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Word and the Way — Cascade Demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* Ember & Stone — the same tokens the app uses. */
+      :root {
+        --terracotta: #c4643d;
+        --terracotta-deep: #a44a28;
+        --stone: #8b6b5a;
+        --linen: #f0ebe4;
+        --linen-deep: #e4dccf;
+        --ink: #2c2420;
+        --display: "Abril Fatface", serif;
+        --serif: "Source Serif 4", Georgia, serif;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: var(--ink);
+        font-family: var(--serif);
+        color: var(--ink);
+        padding: 40px 24px;
+      }
+
+      .stage { width: 100%; max-width: 1100px; }
+
+      .caption {
+        text-align: center;
+        color: var(--stone);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3em;
+        margin: 0 0 28px;
+      }
+
+      .band {
+        display: grid;
+        grid-template-columns: 1fr 1.4fr 1fr;
+        gap: 24px;
+        align-items: stretch;
+      }
+
+      /* A station — furniture in the room. */
+      .station {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        background: var(--linen);
+        border: 1px solid rgba(139, 107, 90, 0.15);
+        border-radius: 3px;
+        padding: 24px;
+        box-shadow: 0 24px 50px -32px rgba(0, 0, 0, 0.85);
+        min-height: 380px;
+        /* set by JS each frame */
+        opacity: 0;
+        transform: translateY(26px);
+        will-change: opacity, transform;
+      }
+      .station::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(196, 100, 61, 0.3), transparent);
+      }
+
+      .station-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        border-bottom: 1px solid rgba(139, 107, 90, 0.2);
+        padding-bottom: 10px;
+        margin-bottom: 16px;
+      }
+      .station-head h2 {
+        font-family: var(--display);
+        font-size: 1.5rem;
+        font-weight: 400;
+        line-height: 1;
+        letter-spacing: 0.02em;
+        margin: 0;
+        color: var(--ink);
+      }
+      .sub {
+        font-size: 0.62rem;
+        text-transform: uppercase;
+        letter-spacing: 0.25em;
+        color: var(--stone);
+      }
+
+      .label {
+        font-size: 0.62rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3em;
+        color: rgba(139, 107, 90, 0.75);
+        margin: 0 0 8px;
+      }
+
+      .group {
+        border: 1px solid rgba(139, 107, 90, 0.15);
+        background: rgba(228, 220, 207, 0.3);
+        border-radius: 3px;
+        padding: 4px 16px;
+        margin-bottom: 18px;
+      }
+      .row {
+        padding: 10px 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        border-bottom: 1px solid rgba(139, 107, 90, 0.15);
+      }
+      .row:last-child { border-bottom: 0; }
+      .ref { font-family: var(--display); color: var(--terracotta-deep); font-size: 1rem; }
+      .meta { font-size: 0.72rem; font-style: italic; color: rgba(139, 107, 90, 0.7); }
+      .pill {
+        background: var(--terracotta);
+        color: var(--linen);
+        border-radius: 3px;
+        padding: 6px 12px;
+        font-size: 0.72rem;
+      }
+
+      .field {
+        border-bottom: 1px solid rgba(139, 107, 90, 0.3);
+        color: rgba(139, 107, 90, 0.85);
+        padding: 8px 0;
+        font-size: 0.9rem;
+      }
+      .btn {
+        margin-top: 14px;
+        background: var(--terracotta);
+        color: var(--linen);
+        border-radius: 3px;
+        padding: 8px 16px;
+        font-size: 0.85rem;
+        display: inline-block;
+      }
+
+      .season {
+        border-left: 4px solid rgba(196, 100, 61, 0.7);
+        background: rgba(228, 220, 207, 0.6);
+        border-radius: 3px;
+        padding: 10px 12px;
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .season b { font-family: var(--display); font-weight: 400; }
+      .season .em { font-style: italic; color: var(--stone); font-size: 0.78rem; }
+      .season .scr { font-size: 0.66rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--terracotta); }
+      .ghost-btn {
+        margin-top: auto;
+        text-align: center;
+        border: 1px dashed rgba(196, 100, 61, 0.5);
+        color: var(--terracotta);
+        border-radius: 3px;
+        padding: 10px;
+        font-size: 0.85rem;
+      }
+
+      .decl {
+        background: var(--terracotta);
+        color: var(--linen);
+        border-radius: 3px;
+        padding: 14px 16px;
+        margin-bottom: 14px;
+      }
+      .decl .t { font-family: var(--display); font-size: 1.05rem; line-height: 1.25; }
+      .decl .s { font-size: 0.66rem; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.8; margin-top: 4px; }
+      .conf {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        padding: 7px 0;
+        font-size: 0.88rem;
+        color: rgba(44, 36, 32, 0.9);
+      }
+      .dot { width: 4px; height: 4px; border-radius: 999px; background: rgba(196, 100, 61, 0.4); flex: none; transform: translateY(-2px); }
+      .conf .cref { margin-left: auto; font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(139, 107, 90, 0.5); }
+
+      .card { border-left: 2px solid rgba(196, 100, 61, 0.6); padding-left: 12px; }
+      .card .ref { display: block; }
+      .card .q { font-style: italic; font-size: 0.92rem; color: rgba(44, 36, 32, 0.9); margin-top: 4px; }
+
+      @media (max-width: 760px) {
+        .band { grid-template-columns: 1fr; }
+        .station { min-height: 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <p class="caption">The working band settles in — Shelves · Desk · Wall</p>
+      <div class="band">
+        <!-- The Shelves -->
+        <section class="station" data-i="0">
+          <div class="station-head"><h2>The Shelves</h2><span class="sub">Seasons</span></div>
+          <div class="season">
+            <span><b>Season of Rebuilding</b><br /><span class="em">open</span></span>
+            <span class="scr">Nehemiah 2:18</span>
+          </div>
+          <div class="season">
+            <span><b>Wilderness 2024</b><br /><span class="em">He spoke tenderly there.</span></span>
+            <span class="scr">Hosea 2:14</span>
+          </div>
+          <div class="ghost-btn">✦ Cross into a new season</div>
+        </section>
+
+        <!-- The Desk -->
+        <section class="station" data-i="1">
+          <div class="station-head"><h2>The Desk</h2><span class="sub">Receive · Reflect</span></div>
+          <div class="group">
+            <div class="row">
+              <span><span class="ref">John 1</span> <span class="meta">Day 1/21</span></span>
+              <span class="pill">Open the book →</span>
+            </div>
+            <div class="row">
+              <span class="sub">The Watch</span>
+              <span class="meta">2/4 prayed&nbsp;&nbsp;›</span>
+            </div>
+          </div>
+          <p class="label">Receive a word</p>
+          <div class="field">A reference, if one was given…</div>
+          <div class="field" style="border:0">What is God saying?</div>
+          <span class="btn">Receive</span>
+          <p class="label" style="margin-top:18px">Carrying · 1</p>
+          <div class="card">
+            <span class="ref">Psalm 27:14</span>
+            <span class="q">“Wait for the LORD; be strong, and let your heart take courage.”</span>
+          </div>
+        </section>
+
+        <!-- The Wall -->
+        <section class="station" data-i="2">
+          <div class="station-head"><h2>The Wall</h2><span class="sub">Declare</span></div>
+          <div class="decl">
+            <div class="t">More than a conqueror through Him who loved me.</div>
+            <div class="s">Romans 8:37</div>
+          </div>
+          <p class="label">Confessions</p>
+          <div class="conf"><span class="dot"></span>A Prayer For Protection<span class="cref">Psalm 91</span></div>
+          <div class="conf"><span class="dot"></span>A Woman Of Purity</div>
+          <div class="conf"><span class="dot"></span>Anointing</div>
+          <div class="conf"><span class="dot"></span>Awake To Righteousness</div>
+          <div class="conf"><span class="dot"></span>Blessing The Household</div>
+        </section>
+      </div>
+    </div>
+
+    <script>
+      // The exact stagger + easing from the app's Reveal: easeOutCubic over 800ms,
+      // columns offset left-to-right, then a hold, then loop.
+      const cards = [...document.querySelectorAll(".station")];
+      const ease = (t) => 1 - Math.pow(1 - t, 3);
+      const spans = [
+        [0, 0.55],
+        [0.18, 0.73],
+        [0.36, 0.92],
+      ];
+
+      function setCascade(p) {
+        cards.forEach((el, i) => {
+          const [s, e] = spans[i];
+          const lp = Math.max(0, Math.min(1, (p - s) / (e - s)));
+          const v = ease(lp);
+          el.style.opacity = String(v);
+          el.style.transform = `translateY(${(1 - v) * 26}px)`;
+        });
+      }
+
+      const REVEAL = 1200; // ms for the cascade
+      const HOLD = 1500; // ms fully shown
+      const GAP = 500; // ms hidden between loops
+
+      function loop(now, start) {
+        const t = now - start;
+        if (t < REVEAL) {
+          setCascade(t / REVEAL);
+        } else if (t < REVEAL + HOLD) {
+          setCascade(1);
+        } else if (t < REVEAL + HOLD + GAP) {
+          setCascade(0);
+        } else {
+          start = now; // restart the cycle
+        }
+        requestAnimationFrame((n) => loop(n, start));
+      }
+
+      setCascade(0);
+      requestAnimationFrame((n) => loop(n, n));
+    </script>
+  </body>
+</html>

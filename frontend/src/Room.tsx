@@ -12,6 +12,8 @@ import { SeasonRitual } from "./components/SeasonRitual";
 import { Shelves } from "./components/Shelves";
 import { Wall } from "./components/Wall";
 import { Window } from "./components/Window";
+import { RoomAccordion, RoomThreshold } from "./components/ui/interactive-image-accordion";
+import { Reveal } from "./components/Reveal";
 
 /**
  * The one room. Not a dashboard of pages — a single space the Pastor enters,
@@ -26,6 +28,8 @@ export function Room() {
   const [error, setError] = useState<string>();
   const [inscribed, setInscribed] = useState<string>(); // flash when a word reaches the Altar
   const [ritualOpen, setRitualOpen] = useState(false);
+  const [entered, setEntered] = useState(false); // false = standing at the threshold (full hero)
+  const [activeStations, setActiveStations] = useState<ReadonlySet<string>>(new Set()); // which station ids are in view
 
   const load = useCallback(async () => {
     try {
@@ -49,12 +53,61 @@ export function Room() {
     load();
   }, [load]);
 
+  // Track which station the Pastor is standing in, to light it on the threshold bar.
+  // The Shelves·Desk·Wall band shares a row, so several can be "here" at once.
+  useEffect(() => {
+    if (!entered) return;
+    const ids = [
+      "station-altar",
+      "station-shelves",
+      "station-desk",
+      "station-wall",
+      "station-window",
+    ];
+    const observer = new IntersectionObserver(
+      (entries) => {
+        setActiveStations((prev) => {
+          const next = new Set(prev);
+          for (const entry of entries) {
+            if (entry.isIntersecting) next.add(entry.target.id);
+            else next.delete(entry.target.id);
+          }
+          return next;
+        });
+      },
+      // Active zone: just below the sticky bar, down to the upper-middle of the view.
+      { rootMargin: "-56px 0px -45% 0px", threshold: 0.01 },
+    );
+    ids.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
+  }, [entered]);
+
   const openSeason = seasons.find((s) => s.is_open);
   const openSeasonId = openSeason?.id ?? null;
 
   const flash = (scripture: string) => {
     setInscribed(scripture);
     setTimeout(() => setInscribed(undefined), 5000);
+  };
+
+  // Crossing the room from the entry hero to a station.
+  const goToStation = (anchor: string) => {
+    document.getElementById(anchor)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  // Step through the threshold: the hero collapses to the slim bar, then we walk to the station.
+  const enterRoom = (anchor: string) => {
+    setEntered(true);
+    setTimeout(() => goToStation(anchor), 80); // let the slim bar mount before scrolling
+  };
+
+  // Step back out: re-open the full entrance and return to the top.
+  const reopenThreshold = () => {
+    setEntered(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // The same Encounter list, sorted to its station. The Desk holds the open season's
@@ -78,9 +131,10 @@ export function Room() {
     [encounters],
   );
 
-  const receive = async (scripture: string, words: string) => {
+  const receive = async (scripture: string, words: string, scriptureText?: string) => {
     await api.createEncounter({
       scripture: scripture || null,
+      scripture_text: scriptureText || null,
       words: words || null,
       stage: "received",
       season_id: openSeasonId,
@@ -116,29 +170,58 @@ export function Room() {
           </p>
         </div>
       )}
-      <main className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-6">
+      {/* Once entered, the threshold collapses to a slim, sticky bar of quick-nav. */}
+      {entered && (
+        <RoomThreshold
+          onGo={goToStation}
+          onReopen={reopenThreshold}
+          active={activeStations}
+        />
+      )}
+
+      <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:gap-8 sm:px-6 sm:py-10">
         {error && (
           <p className="rounded-sm bg-terracotta-deep px-4 py-2 text-center text-sm text-linen">
             {error}
           </p>
         )}
 
-        {/* The wall you face on entry. */}
-        <Altar cornerstones={cornerstones} onThreshold={setSeed} />
+        {/* The threshold — the full entrance hero, shown until you step into the room. */}
+        {!entered && <RoomAccordion onEnter={enterRoom} />}
 
-        {/* The working band: Shelves · Desk · Wall. */}
-        <div className="grid gap-5 lg:grid-cols-[1fr_1.4fr_1fr]">
-          <Shelves
-            seasons={seasons}
-            hasOpenSeason={openSeasonId !== null}
-            onBeginRitual={() => setRitualOpen(true)}
-          />
-          <Desk active={deskActive} seed={seed} onReceive={receive} onCarry={carry} />
-          <Wall declarations={declarations} confessions={confessions} />
+        {/* The wall you face on entry. */}
+        <Reveal id="station-altar" className="scroll-mt-24">
+          <Altar cornerstones={cornerstones} onThreshold={setSeed} />
+        </Reveal>
+
+        {/* The working band: Shelves · Desk · Wall — equal-height furniture on one
+            baseline, settling in left-to-right as the band scrolls into view. */}
+        <div className="grid items-stretch gap-6 lg:grid-cols-[1fr_1.4fr_1fr]">
+          <Reveal id="station-shelves" className="h-full scroll-mt-24" delay={0}>
+            <Shelves
+              seasons={seasons}
+              hasOpenSeason={openSeasonId !== null}
+              onBeginRitual={() => setRitualOpen(true)}
+            />
+          </Reveal>
+          <Reveal id="station-desk" className="h-full scroll-mt-24" delay={120}>
+            <Desk
+              active={deskActive}
+              seed={seed}
+              onReceive={receive}
+              onCarry={carry}
+              onReadingComplete={load}
+            />
+          </Reveal>
+          <Reveal id="station-wall" className="h-full scroll-mt-24" delay={240}>
+            <Wall declarations={declarations} confessions={confessions} />
+          </Reveal>
         </div>
 
-        {/* The view outward. */}
-        <Window testimonies={testimonies} />
+        {/* The view outward — framed like a window in the wall, not a full-width band. */}
+        <Reveal id="station-window" className="mx-auto w-full max-w-3xl scroll-mt-24">
+          <Window testimonies={testimonies} />
+        </Reveal>
 
         <p className="pt-2 text-center text-xs uppercase tracking-[0.3em] text-stone/60">
           The Word and the Way

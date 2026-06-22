@@ -19,6 +19,7 @@ export function Wall({ declarations, confessions }: WallProps) {
   const [semanticResults, setSemanticResults] = useState<ConfessionSummary[] | null>(null);
   const [searching, setSearching] = useState(false);
   const [searchedQuery, setSearchedQuery] = useState("");
+  const [searchFailed, setSearchFailed] = useState(false); // semantic search unreachable
   const inputRef = useRef<HTMLInputElement>(null);
 
   const titleFiltered = useMemo(() => {
@@ -36,9 +37,14 @@ export function Wall({ declarations, confessions }: WallProps) {
       if (!q) return;
       setSearching(true);
       setSearchedQuery(q);
+      setSearchFailed(false);
       try {
         const results = await api.searchConfessions(q, 10);
         setSemanticResults(results);
+      } catch {
+        // Ollama/ChromaDB unreachable — fall back to the title filter, which still works.
+        setSemanticResults(null);
+        setSearchFailed(true);
       } finally {
         setSearching(false);
       }
@@ -49,12 +55,14 @@ export function Wall({ declarations, confessions }: WallProps) {
   const clearSearch = () => {
     setSemanticResults(null);
     setSearchedQuery("");
+    setSearchFailed(false);
     setQuery("");
     inputRef.current?.focus();
   };
 
   const handleQueryChange = (value: string) => {
     setQuery(value);
+    setSearchFailed(false);
     if (semanticResults !== null) setSemanticResults(null);
   };
 
@@ -140,6 +148,10 @@ export function Wall({ declarations, confessions }: WallProps) {
                   browse all
                 </button>
               </div>
+            ) : searchFailed ? (
+              <p className="mb-2 text-xs italic text-stone/70">
+                Search by meaning is resting — showing title matches.
+              </p>
             ) : query.trim() ? (
               <p className="mb-2 text-xs italic text-stone/50">
                 Press Enter to search by meaning
@@ -153,31 +165,36 @@ export function Wall({ declarations, confessions }: WallProps) {
             )}
 
             {!searching && (
-              <ul className="flex max-h-72 flex-col overflow-y-auto">
+              <ul className="-mx-2 flex max-h-72 flex-col overflow-y-auto pr-1">
                 {displayList.map((c, i) => (
                   <li key={c.id}>
                     <button
                       onClick={() => unroll(c)}
-                      className="group w-full border-b border-stone/15 py-1.5 text-left transition-colors hover:text-terracotta-deep"
+                      className="group flex w-full items-baseline gap-2.5 rounded-sm px-2 py-1.5 text-left transition-colors hover:bg-terracotta/10"
                     >
-                      <span className="font-serif text-sm text-ink/90 group-hover:text-terracotta-deep">
-                        {isSemanticMode && (
-                          <span className="mr-1.5 font-display text-xs text-terracotta/60">
-                            {i + 1}.
-                          </span>
-                        )}
+                      {isSemanticMode ? (
+                        <span className="w-4 shrink-0 text-right font-display text-xs text-terracotta/70">
+                          {i + 1}
+                        </span>
+                      ) : (
+                        <span
+                          aria-hidden
+                          className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-terracotta/40 transition-colors group-hover:bg-terracotta"
+                        />
+                      )}
+                      <span className="min-w-0 flex-1 truncate font-serif text-sm text-ink/90 group-hover:text-terracotta-deep">
                         {c.title}
                       </span>
-                      {isSemanticMode && c.refs.length > 0 && (
-                        <span className="ml-2 text-xs text-stone/50">
-                          {c.refs.slice(0, 2).join(" · ")}
+                      {c.refs.length > 0 && (
+                        <span className="shrink-0 font-serif text-[0.7rem] uppercase tracking-wider text-stone/45">
+                          {c.refs[0]}
                         </span>
                       )}
                     </button>
                   </li>
                 ))}
                 {displayList.length === 0 && (
-                  <li className="py-2 text-sm italic text-stone">
+                  <li className="px-2 py-2 text-sm italic text-stone">
                     {isSemanticMode ? "Nothing matched on the Wall." : "No confession by that name."}
                   </li>
                 )}

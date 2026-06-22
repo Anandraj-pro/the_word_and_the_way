@@ -13,7 +13,9 @@ from . import rag
 from .confessions_loader import load_confessions
 from .database import Base, SessionLocal, engine
 from .models import Confession
-from .routers import confessions, encounters, seasons
+from . import prayer as prayer_service
+from . import reading as reading_service
+from .routers import confessions, encounters, prayer, reading, scripture, seasons
 from .seed import seed_if_empty
 
 
@@ -23,6 +25,8 @@ async def lifespan(app: FastAPI):
     db = SessionLocal()
     try:
         seed_if_empty(db)
+        reading_service.seed_plan_if_empty(db)  # the daily reading plan
+        prayer_service.seed_prayer_if_empty(db)  # the daily prayer watch
         load_confessions(db)  # sync the Wall corpus from disk every startup
         all_confessions = db.scalars(select(Confession)).all()
         rag.index_confessions(all_confessions)  # embed any new confessions into ChromaDB
@@ -44,6 +48,9 @@ app.add_middleware(
 app.include_router(encounters.router)
 app.include_router(seasons.router)
 app.include_router(confessions.router)
+app.include_router(scripture.router)
+app.include_router(reading.router)
+app.include_router(prayer.router)
 
 
 @app.get("/api/health")

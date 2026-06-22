@@ -92,6 +92,70 @@ class ConfessionRead(ConfessionSummary):
     body: str
 
 
+# ---- Scripture lookup (the Desk) ----
+class ScriptureRead(BaseModel):
+    reference: str  # the canonical reference, e.g. "Psalms 27:14"
+    text: str
+    translation: str
+
+
+class Verse(BaseModel):
+    verse: int | None = None
+    text: str
+
+
+class PassageRead(BaseModel):
+    """A whole chapter broken into numbered verses for the book reader."""
+
+    reference: str
+    translation: str
+    verses: list[Verse]
+    previous_reference: str | None = None
+    next_reference: str | None = None
+
+
+# ---- Daily reading (the Desk) ----
+class ReadingToday(BaseModel):
+    status: str  # "to_read" | "done_today" | "plan_complete"
+    day_index: int | None = None
+    reference: str | None = None
+    text: str | None = None
+    translation: str | None = None
+    total: int
+    completed: int
+    streak: int
+    next_reference: str | None = None
+
+
+class ReadingComplete(BaseModel):
+    response: str | None = None  # the Pastor's word in answer — becomes an Encounter
+    # The chapter actually read. Omitted (or equal to the plan's chapter) → a plan reading
+    # that advances the plan; a different chapter → free reading that only keeps the streak.
+    reference: str | None = None
+
+
+# ---- Daily prayer (the watch, at the Desk) ----
+class PrayerFocusRead(BaseModel):
+    id: int
+    label: str
+    kind: str  # "standard" | "personal"
+    scripture: str | None = None
+    prayed_today: bool
+    last_prayed: date | None = None
+
+
+class PrayerToday(BaseModel):
+    focuses: list[PrayerFocusRead]
+    streak: int
+    prayed_today: int
+    total: int
+
+
+class PrayerFocusCreate(BaseModel):
+    label: str
+    scripture: str | None = None
+
+
 # ---- The crossing result ----
 class CrossResult(BaseModel):
     """What the crossing did: the new season, the words carried, and any newly inscribed."""

@@ -7,6 +7,16 @@ Remembrance**, with the **Desk**, **Shelves**, **Wall**, and **Window** framing 
 Everything in the room is one object — an **Encounter** — moving along a single path:
 **Receive → Reflect → Declare → Carry → Witness**.
 
+## The room, settling in
+
+As you enter, the working band — **Shelves · Desk · Wall** — settles into view, staggered
+left to right (scroll-triggered, and honoring `prefers-reduced-motion`).
+
+![The working band settling into view, staggered left to right](docs/cascade.gif)
+
+> Recreated from [`docs/cascade-demo.html`](docs/cascade-demo.html), which loops the same
+> easing and stagger used by `components/Reveal.tsx`.
+
 ## Run it locally
 
 Two local processes, offline-first (SQLite on disk, no cloud).

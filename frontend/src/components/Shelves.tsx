@@ -16,7 +16,7 @@ export function Shelves({ seasons, hasOpenSeason, onBeginRitual }: ShelvesProps)
       empty={seasons.length === 0}
       emptyWord="No seasons named yet."
     >
-      <div className="flex flex-col gap-2 overflow-y-auto">
+      <div className="flex min-h-0 flex-col gap-2 overflow-y-auto">
         {seasons.map((s) => (
           <button
             key={s.id}
@@ -41,7 +41,7 @@ export function Shelves({ seasons, hasOpenSeason, onBeginRitual }: ShelvesProps)
 
       <button
         onClick={onBeginRitual}
-        className="mt-3 w-full rounded-sm border border-dashed border-terracotta/50 py-2 font-serif text-sm text-terracotta transition-colors hover:border-terracotta hover:bg-terracotta/5"
+        className="mt-auto w-full rounded-sm border border-dashed border-terracotta/50 py-2.5 font-serif text-sm text-terracotta transition-colors hover:border-terracotta hover:bg-terracotta/5"
       >
         {hasOpenSeason ? "✦ Cross into a new season" : "✦ Open the first season"}
       </button>

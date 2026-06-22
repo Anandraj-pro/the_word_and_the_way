@@ -67,6 +67,58 @@ export interface CrossResult {
   inscribed: Encounter[]; // crossed to Cornerstone in this crossing
 }
 
+/** A verse fetched for the Desk lookup. */
+export interface Scripture {
+  reference: string; // canonical, e.g. "Psalms 27:14"
+  text: string;
+  translation: string;
+}
+
+/** A standing thing prayed over — the daily watch. */
+export interface PrayerFocus {
+  id: number;
+  label: string;
+  kind: "standard" | "personal";
+  scripture: string | null;
+  prayed_today: boolean;
+  last_prayed: string | null;
+}
+
+export interface PrayerToday {
+  focuses: PrayerFocus[];
+  streak: number;
+  prayed_today: number;
+  total: number;
+}
+
+/** One numbered verse in the book reader. */
+export interface Verse {
+  verse: number | null;
+  text: string;
+}
+
+/** A whole chapter, broken into verses, for the book reader. */
+export interface Passage {
+  reference: string;
+  translation: string;
+  verses: Verse[];
+  previous_reference: string | null;
+  next_reference: string | null;
+}
+
+/** Today's reading on the Desk — the daily Bible-reading rhythm. */
+export interface ReadingToday {
+  status: "to_read" | "done_today" | "plan_complete";
+  day_index: number | null;
+  reference: string | null;
+  text: string | null;
+  translation: string | null;
+  total: number;
+  completed: number;
+  streak: number;
+  next_reference: string | null;
+}
+
 async function http<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`/api${path}`, {
     headers: { "Content-Type": "application/json" },
@@ -103,4 +155,24 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ q, n }),
     }),
+  scripture: (reference: string) =>
+    http<Scripture>(`/scripture?reference=${encodeURIComponent(reference)}`),
+  passage: (reference: string) =>
+    http<Passage>(`/scripture/passage?reference=${encodeURIComponent(reference)}`),
+  readingToday: () => http<ReadingToday>("/reading/today"),
+  completeReading: (response?: string, reference?: string) =>
+    http<ReadingToday>("/reading/complete", {
+      method: "POST",
+      body: JSON.stringify({ response: response ?? null, reference: reference ?? null }),
+    }),
+  prayerToday: () => http<PrayerToday>("/prayer/today"),
+  togglePrayer: (focusId: number) =>
+    http<PrayerToday>(`/prayer/${focusId}/pray`, { method: "POST" }),
+  addPrayerFocus: (label: string, scripture?: string) =>
+    http<PrayerToday>("/prayer/focus", {
+      method: "POST",
+      body: JSON.stringify({ label, scripture: scripture ?? null }),
+    }),
+  removePrayerFocus: (focusId: number) =>
+    http<PrayerToday>(`/prayer/focus/${focusId}`, { method: "DELETE" }),
 };
