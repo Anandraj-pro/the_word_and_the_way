@@ -3,8 +3,9 @@ import { Station } from "./Station";
 
 interface ShelvesProps {
   seasons: Season[];
-  hasOpenSeason: boolean;
-  onBeginRitual: () => void;
+  /** The crossing ritual now lives on the Altar; pass these only where a trigger is wanted. */
+  hasOpenSeason?: boolean;
+  onBeginRitual?: () => void;
 }
 
 /** The Shelves — the Archive. Seasons are the spines; the only calendar the room knows. */
@@ -39,12 +40,14 @@ export function Shelves({ seasons, hasOpenSeason, onBeginRitual }: ShelvesProps)
         ))}
       </div>
 
-      <button
-        onClick={onBeginRitual}
-        className="mt-auto w-full rounded-sm border border-dashed border-terracotta/50 py-2.5 font-serif text-sm text-terracotta transition-colors hover:border-terracotta hover:bg-terracotta/5"
-      >
-        {hasOpenSeason ? "✦ Cross into a new season" : "✦ Open the first season"}
-      </button>
+      {onBeginRitual && (
+        <button
+          onClick={onBeginRitual}
+          className="mt-auto w-full rounded-sm border border-dashed border-terracotta/50 py-2.5 font-serif text-sm text-terracotta transition-colors hover:border-terracotta hover:bg-terracotta/5"
+        >
+          {hasOpenSeason ? "✦ Cross into a new season" : "✦ Open the first season"}
+        </button>
+      )}
     </Station>
   );
 }

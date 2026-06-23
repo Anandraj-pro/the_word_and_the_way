@@ -1,20 +1,42 @@
 import { useMemo, useRef, useState } from "react";
 import { api, type Confession, type ConfessionSummary, type Encounter } from "../api";
 import { Station } from "./Station";
+import { WarRoom, type WarRoomItem } from "./WarRoom";
 
 interface WallProps {
   declarations: Encounter[];
   confessions: ConfessionSummary[];
+  cornerstones: Encounter[];
 }
 
 /**
  * The Wall — Declare. Type to filter by title instantly; press Enter to
- * search by meaning (RAG semantic search via ChromaDB + Ollama).
+ * search by meaning (RAG semantic search via ChromaDB + Ollama). Gather several
+ * words and enter the War Room to proclaim them aloud, one at a time.
  */
-export function Wall({ declarations, confessions }: WallProps) {
+export function Wall({ declarations, confessions, cornerstones }: WallProps) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState<Confession | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // The War Room muster — words marked to proclaim, in the order chosen.
+  const [muster, setMuster] = useState<WarRoomItem[]>([]);
+  const [warRoomOpen, setWarRoomOpen] = useState(false);
+
+  const isMustered = (kind: WarRoomItem["kind"], id: number) =>
+    muster.some((m) => m.kind === kind && m.id === id);
+
+  const toggleMuster = (item: WarRoomItem) =>
+    setMuster((prev) =>
+      prev.some((m) => m.kind === item.kind && m.id === item.id)
+        ? prev.filter((m) => !(m.kind === item.kind && m.id === item.id))
+        : [...prev, item],
+    );
+
+  const leaveWarRoom = () => {
+    setWarRoomOpen(false);
+    setMuster([]);
+  };
 
   const [semanticResults, setSemanticResults] = useState<ConfessionSummary[] | null>(null);
   const [searching, setSearching] = useState(false);
@@ -80,34 +102,75 @@ export function Wall({ declarations, confessions }: WallProps) {
   return (
     <Station
       label="The Wall"
-      subtitle="Declare"
+      subtitle="Declarations"
       empty={isEmpty}
       emptyWord="Nothing is posted on the wall yet."
     >
       <div className="flex flex-col gap-3 overflow-y-auto">
-        {/* The Pastor's own declarations, proclaimed in his own words. */}
-        {declarations.map((d) => (
-          <div
-            key={d.id}
-            className="rounded-sm bg-terracotta px-4 py-3 text-linen shadow-sm"
-          >
-            <p className="font-display text-base leading-snug">
-              {d.words || d.scripture_text}
-            </p>
-            {d.scripture && (
-              <p className="mt-1 text-xs uppercase tracking-[0.2em] text-linen/75">
-                {d.scripture}
-              </p>
-            )}
+        {/* The muster — words gathered for the War Room, ready to be proclaimed. */}
+        {muster.length > 0 && (
+          <div className="flex items-center justify-between gap-2 rounded-sm border border-terracotta/40 bg-terracotta/10 px-3 py-2">
+            <button
+              onClick={() => setWarRoomOpen(true)}
+              className="font-display text-sm uppercase tracking-[0.15em] text-terracotta-deep transition-colors hover:text-terracotta"
+            >
+              Enter the War Room ({muster.length})
+            </button>
+            <button
+              onClick={() => setMuster([])}
+              className="text-xs text-stone/60 underline underline-offset-2 transition-colors hover:text-terracotta"
+            >
+              clear
+            </button>
           </div>
-        ))}
+        )}
+
+        {/* The Pastor's own declarations, proclaimed in his own words. */}
+        {declarations.map((d) => {
+          const mustered = isMustered("declaration", d.id);
+          return (
+            <div
+              key={d.id}
+              className="relative rounded-sm bg-terracotta px-4 py-3 text-linen shadow-sm"
+            >
+              <p className="pr-6 font-display text-base leading-snug">
+                {d.words || d.scripture_text}
+              </p>
+              {d.scripture && (
+                <p className="mt-1 text-xs uppercase tracking-[0.2em] text-linen/75">
+                  {d.scripture}
+                </p>
+              )}
+              <button
+                onClick={() =>
+                  toggleMuster({
+                    kind: "declaration",
+                    id: d.id,
+                    title: d.words || d.scripture_text || d.scripture || "",
+                    scripture: d.scripture,
+                  })
+                }
+                aria-label={mustered ? "Remove from War Room" : "Add to War Room"}
+                aria-pressed={mustered}
+                title={mustered ? "In the War Room" : "Take to the War Room"}
+                className={`absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full text-xs leading-none transition-colors ${
+                  mustered
+                    ? "bg-linen text-terracotta-deep"
+                    : "bg-linen/20 text-linen hover:bg-linen/35"
+                }`}
+              >
+                {mustered ? "✓" : "+"}
+              </button>
+            </div>
+          );
+        })}
 
         {/* The inherited corpus — a library to read and declare from. */}
         {confessions.length > 0 && (
           <div className="mt-1">
             <div className="mb-2 flex items-baseline justify-between">
               <p className="text-xs uppercase tracking-[0.25em] text-stone/70">
-                Confessions
+                Scriptural declarations
               </p>
               <span className="text-xs text-stone/60">
                 {isSemanticMode ? `${displayList.length} found` : confessions.length}
@@ -121,7 +184,7 @@ export function Wall({ declarations, confessions }: WallProps) {
                 value={query}
                 onChange={(e) => handleQueryChange(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Find a confession… or describe a need"
+                placeholder="Find a declaration… or describe a need"
                 className="w-full border-b border-stone/30 bg-transparent pb-1 pr-6 font-serif text-sm text-ink placeholder:text-stone/45 focus:border-terracotta focus:outline-none"
               />
               {query && (
@@ -166,36 +229,59 @@ export function Wall({ declarations, confessions }: WallProps) {
 
             {!searching && (
               <ul className="-mx-2 flex max-h-72 flex-col overflow-y-auto pr-1">
-                {displayList.map((c, i) => (
-                  <li key={c.id}>
-                    <button
-                      onClick={() => unroll(c)}
-                      className="group flex w-full items-baseline gap-2.5 rounded-sm px-2 py-1.5 text-left transition-colors hover:bg-terracotta/10"
-                    >
-                      {isSemanticMode ? (
-                        <span className="w-4 shrink-0 text-right font-display text-xs text-terracotta/70">
-                          {i + 1}
+                {displayList.map((c, i) => {
+                  const mustered = isMustered("confession", c.id);
+                  return (
+                    <li key={c.id} className="flex items-center gap-1">
+                      <button
+                        onClick={() => unroll(c)}
+                        className="group flex min-w-0 flex-1 items-baseline gap-2.5 rounded-sm px-2 py-1.5 text-left transition-colors hover:bg-terracotta/10"
+                      >
+                        {isSemanticMode ? (
+                          <span className="w-4 shrink-0 text-right font-display text-xs text-terracotta/70">
+                            {i + 1}
+                          </span>
+                        ) : (
+                          <span
+                            aria-hidden
+                            className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-terracotta/40 transition-colors group-hover:bg-terracotta"
+                          />
+                        )}
+                        <span className="min-w-0 flex-1 truncate font-serif text-sm text-ink/90 group-hover:text-terracotta-deep">
+                          {c.title}
                         </span>
-                      ) : (
-                        <span
-                          aria-hidden
-                          className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-terracotta/40 transition-colors group-hover:bg-terracotta"
-                        />
-                      )}
-                      <span className="min-w-0 flex-1 truncate font-serif text-sm text-ink/90 group-hover:text-terracotta-deep">
-                        {c.title}
-                      </span>
-                      {c.refs.length > 0 && (
-                        <span className="shrink-0 font-serif text-[0.7rem] uppercase tracking-wider text-stone/45">
-                          {c.refs[0]}
-                        </span>
-                      )}
-                    </button>
-                  </li>
-                ))}
+                        {c.refs.length > 0 && (
+                          <span className="shrink-0 font-serif text-[0.7rem] uppercase tracking-wider text-stone/45">
+                            {c.refs[0]}
+                          </span>
+                        )}
+                      </button>
+                      <button
+                        onClick={() =>
+                          toggleMuster({
+                            kind: "confession",
+                            id: c.id,
+                            slug: c.slug,
+                            title: c.title,
+                          })
+                        }
+                        aria-label={mustered ? "Remove from War Room" : "Add to War Room"}
+                        aria-pressed={mustered}
+                        title={mustered ? "In the War Room" : "Take to the War Room"}
+                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs leading-none transition-colors ${
+                          mustered
+                            ? "bg-terracotta text-linen"
+                            : "text-stone/40 hover:bg-terracotta/15 hover:text-terracotta"
+                        }`}
+                      >
+                        {mustered ? "✓" : "+"}
+                      </button>
+                    </li>
+                  );
+                })}
                 {displayList.length === 0 && (
                   <li className="px-2 py-2 text-sm italic text-stone">
-                    {isSemanticMode ? "Nothing matched on the Wall." : "No confession by that name."}
+                    {isSemanticMode ? "Nothing matched on the Wall." : "No declaration by that name."}
                   </li>
                 )}
               </ul>
@@ -271,6 +357,15 @@ export function Wall({ declarations, confessions }: WallProps) {
             )}
           </div>
         </div>
+      )}
+
+      {/* The War Room — the muster, proclaimed full-screen, ending on the cornerstone. */}
+      {warRoomOpen && (
+        <WarRoom
+          sequence={muster}
+          cornerstone={cornerstones[0] ?? null}
+          onClose={leaveWarRoom}
+        />
       )}
     </Station>
   );

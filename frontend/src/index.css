@@ -60,4 +60,13 @@ body {
     opacity: 1;
     transform: none;
   }
+
+  /* The guided walk's spotlight gliding from one station to the next. */
+  .tour-spot {
+    transition:
+      top 400ms cubic-bezier(0.22, 1, 0.36, 1),
+      left 400ms cubic-bezier(0.22, 1, 0.36, 1),
+      width 400ms cubic-bezier(0.22, 1, 0.36, 1),
+      height 400ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
 }

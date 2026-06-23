@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { api, type PrayerToday } from "../api";
+import { api, type PrayerFocus, type PrayerToday } from "../api";
 
 /**
  * The Watch — the daily prayer tracker at the Desk. Check off each focus as you pray it;
@@ -32,6 +32,50 @@ export function DailyPrayer() {
 
   const toggle = async (id: number) => setWatch(await api.togglePrayer(id));
   const remove = async (id: number) => setWatch(await api.removePrayerFocus(id));
+
+  // The watch keeps two registers: the standing foci (seeded, never deleted) and the
+  // Pastor's own. Order within each is the API's own (standard-first by sort_order).
+  const standard = watch.focuses.filter((f) => f.kind === "standard");
+  const personal = watch.focuses.filter((f) => f.kind === "personal");
+
+  const renderFocus = (f: PrayerFocus) => (
+    <li key={f.id} className="group flex items-center gap-2.5 py-1">
+      <button
+        onClick={() => toggle(f.id)}
+        aria-label={f.prayed_today ? "Prayed" : "Mark prayed"}
+        className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border text-[10px] transition-colors ${
+          f.prayed_today
+            ? "border-terracotta bg-terracotta text-linen"
+            : "border-stone/50 hover:border-terracotta"
+        }`}
+      >
+        {f.prayed_today ? "✓" : ""}
+      </button>
+      <button onClick={() => toggle(f.id)} className="flex-1 text-left">
+        <span
+          className={`font-serif text-sm leading-tight ${
+            f.prayed_today ? "italic text-stone" : "text-ink"
+          }`}
+        >
+          {f.label}
+        </span>
+        {f.scripture && (
+          <span className="ml-2 text-xs uppercase tracking-wider text-terracotta/70">
+            {f.scripture}
+          </span>
+        )}
+      </button>
+      {f.kind === "personal" && (
+        <button
+          onClick={() => remove(f.id)}
+          aria-label="Remove focus"
+          className="shrink-0 text-xs text-stone/40 opacity-0 transition-opacity hover:text-terracotta-deep group-hover:opacity-100"
+        >
+          ✕
+        </button>
+      )}
+    </li>
+  );
 
   const submitFocus = async () => {
     if (!label.trim()) return;
@@ -69,49 +113,25 @@ export function DailyPrayer() {
 
       {open && (
         <>
-          <ul className="mt-2 flex flex-col">
-        {watch.focuses.map((f) => (
-          <li key={f.id} className="group flex items-center gap-2.5 py-1">
-            <button
-              onClick={() => toggle(f.id)}
-              aria-label={f.prayed_today ? "Prayed" : "Mark prayed"}
-              className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border text-[10px] transition-colors ${
-                f.prayed_today
-                  ? "border-terracotta bg-terracotta text-linen"
-                  : "border-stone/50 hover:border-terracotta"
-              }`}
-            >
-              {f.prayed_today ? "✓" : ""}
-            </button>
-            <button
-              onClick={() => toggle(f.id)}
-              className="flex-1 text-left"
-            >
-              <span
-                className={`font-serif text-sm leading-tight ${
-                  f.prayed_today ? "italic text-stone" : "text-ink"
-                }`}
-              >
-                {f.label}
-              </span>
-              {f.scripture && (
-                <span className="ml-2 text-xs uppercase tracking-wider text-terracotta/70">
-                  {f.scripture}
-                </span>
-              )}
-            </button>
-            {f.kind === "personal" && (
-              <button
-                onClick={() => remove(f.id)}
-                aria-label="Remove focus"
-                className="shrink-0 text-xs text-stone/40 opacity-0 transition-opacity hover:text-terracotta-deep group-hover:opacity-100"
-              >
-                ✕
-              </button>
-            )}
-          </li>
-        ))}
-      </ul>
+          {/* The standing watch — seeded foci, always kept before the room. */}
+          {standard.length > 0 && (
+            <section className="mt-2">
+              <p className="mb-0.5 text-[0.6rem] uppercase tracking-[0.25em] text-stone/55">
+                Standing watch
+              </p>
+              <ul className="flex flex-col">{standard.map(renderFocus)}</ul>
+            </section>
+          )}
+
+          {/* The Pastor's own burdens, added to the watch. */}
+          {personal.length > 0 && (
+            <section className="mt-3">
+              <p className="mb-0.5 text-[0.6rem] uppercase tracking-[0.25em] text-stone/55">
+                Personal
+              </p>
+              <ul className="flex flex-col">{personal.map(renderFocus)}</ul>
+            </section>
+          )}
 
       {adding ? (
         <div className="mt-2 flex flex-col gap-1.5">

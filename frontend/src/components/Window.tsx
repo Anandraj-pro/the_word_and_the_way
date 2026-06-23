@@ -7,7 +7,7 @@ export function Window({ testimonies }: { testimonies: Encounter[] }) {
   return (
     <Station
       label="The Window"
-      subtitle="Witness"
+      subtitle="Testimonies"
       empty={testimonies.length === 0}
       emptyWord="No testimony has been recorded yet."
     >

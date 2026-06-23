@@ -11,8 +11,10 @@ export interface StationPanel {
   id: number;
   /** The station's name, e.g. "The Desk". */
   title: string;
-  /** Its act in the room, e.g. "Receive · Reflect". */
+  /** Plain function shown beneath the name, e.g. "Daily devotions". */
   subtitle: string;
+  /** One word for the function — paired with the name in navigation. */
+  nav: string;
   /** A line spoken when the panel opens. */
   line: string;
   /** Which bespoke scene to draw behind the panel. */
@@ -27,16 +29,18 @@ const STATIONS: StationPanel[] = [
   {
     id: 1,
     title: "The Altar",
-    subtitle: "What you face",
-    line: "Words carried through three seasons, inscribed in stone.",
+    subtitle: "Home & remembrance",
+    nav: "Home",
+    line: "Your progress, and the words carried through to stone.",
     motif: "altar",
     anchor: "station-altar",
   },
   {
     id: 2,
     title: "The Desk",
-    subtitle: "Receive · Reflect",
-    line: "A rhema word is captured and begins its carrying.",
+    subtitle: "Daily devotions",
+    nav: "Devotions",
+    line: "Read the Word, keep the watch, and receive what God is saying.",
     motif: "desk",
     anchor: "station-desk",
   },
@@ -44,6 +48,7 @@ const STATIONS: StationPanel[] = [
     id: 3,
     title: "The Shelves",
     subtitle: "Seasons",
+    nav: "Seasons",
     line: "Time kept in seasons — what is open, what has closed.",
     motif: "shelves",
     anchor: "station-shelves",
@@ -51,16 +56,18 @@ const STATIONS: StationPanel[] = [
   {
     id: 4,
     title: "The Wall",
-    subtitle: "Declare",
-    line: "Declarations spoken outward and held to the light.",
+    subtitle: "Declarations",
+    nav: "Declarations",
+    line: "Scriptural declarations to speak outward and hold to the light.",
     motif: "wall",
     anchor: "station-wall",
   },
   {
     id: 5,
     title: "The Window",
-    subtitle: "Witness",
-    line: "The view outward — testimonies of what was carried through.",
+    subtitle: "Testimonies",
+    nav: "Testimonies",
+    line: "Testimonies of what God carried you through.",
     motif: "window",
     anchor: "station-window",
   },
@@ -348,15 +355,16 @@ export function RoomThreshold({ items = STATIONS, onGo, onReopen, active }: Room
                   hover:bg-terracotta/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta
                   ${
                     isActive
-                      ? "max-w-[10rem] px-2.5 text-terracotta opacity-100"
+                      ? "max-w-[13rem] px-2.5 text-terracotta opacity-100"
                       : expanded
-                        ? "max-w-[10rem] px-2.5 text-linen/70 opacity-100 hover:text-linen"
+                        ? "max-w-[13rem] px-2.5 text-linen/70 opacity-100 hover:text-linen"
                         : // collapsed out — reopens on bar hover or keyboard focus
-                          "max-w-0 px-0 text-linen/70 opacity-0 hover:text-linen group-hover/nav:max-w-[10rem] group-hover/nav:px-2.5 group-hover/nav:opacity-100 focus-visible:max-w-[10rem] focus-visible:px-2.5 focus-visible:opacity-100"
+                          "max-w-0 px-0 text-linen/70 opacity-0 hover:text-linen group-hover/nav:max-w-[13rem] group-hover/nav:px-2.5 group-hover/nav:opacity-100 focus-visible:max-w-[13rem] focus-visible:px-2.5 focus-visible:opacity-100"
                   }
                 `}
               >
-                {it.title.replace(/^The\s+/, "")}
+                <span className="opacity-60">{it.title.replace(/^The\s+/, "")} · </span>
+                {it.nav}
                 <span
                   className={`absolute inset-x-2.5 -bottom-px h-px bg-terracotta transition-opacity duration-300 ${
                     isActive ? "opacity-100" : "opacity-0"
@@ -378,10 +386,12 @@ interface RoomAccordionProps {
   initialIndex?: number;
   /** Called with a panel's anchor id when chosen — wire this to scroll. */
   onEnter?: (anchor: string) => void;
+  /** Open the guided walk through the room. */
+  onTour?: () => void;
 }
 
 // --- The entry hero: "Enter the room." ---
-export function RoomAccordion({ items = STATIONS, initialIndex = 1, onEnter }: RoomAccordionProps) {
+export function RoomAccordion({ items = STATIONS, initialIndex = 1, onEnter, onTour }: RoomAccordionProps) {
   const [activeIndex, setActiveIndex] = useState(initialIndex);
   const active = items[activeIndex] ?? items[0];
 
@@ -411,6 +421,19 @@ export function RoomAccordion({ items = STATIONS, initialIndex = 1, onEnter }: R
               →
             </span>
           </button>
+
+          {onTour && (
+            <p className="mt-4 text-sm text-linen/50">
+              New here?{" "}
+              <button
+                type="button"
+                onClick={onTour}
+                className="font-serif text-terracotta underline-offset-4 transition-colors hover:text-linen hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta"
+              >
+                Take a walk through the room
+              </button>
+            </p>
+          )}
         </div>
 
         {/* Right: the stations, side by side */}

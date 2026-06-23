@@ -4,6 +4,8 @@ import {
   type ConfessionSummary,
   type CrossResult,
   type Encounter,
+  type PrayerToday,
+  type ReadingToday,
   type Season,
 } from "./api";
 import { Altar } from "./components/Altar";
@@ -14,6 +16,10 @@ import { Wall } from "./components/Wall";
 import { Window } from "./components/Window";
 import { RoomAccordion, RoomThreshold } from "./components/ui/interactive-image-accordion";
 import { Reveal } from "./components/Reveal";
+import { RoomTour } from "./components/RoomTour";
+
+// Set once the first walk through the room has been taken (or skipped).
+const TOUR_SEEN_KEY = "tww.tour.v1";
 
 /**
  * The one room. Not a dashboard of pages — a single space the Pastor enters,
@@ -30,6 +36,19 @@ export function Room() {
   const [ritualOpen, setRitualOpen] = useState(false);
   const [entered, setEntered] = useState(false); // false = standing at the threshold (full hero)
   const [activeStations, setActiveStations] = useState<ReadonlySet<string>>(new Set()); // which station ids are in view
+  const [readingToday, setReadingToday] = useState<ReadingToday | null>(null); // dashboard progress
+  const [prayerToday, setPrayerToday] = useState<PrayerToday | null>(null);
+  const [tourOpen, setTourOpen] = useState(false); // the first walk through the room
+
+  // First visit: take the walk once, then remember it was taken.
+  useEffect(() => {
+    if (!localStorage.getItem(TOUR_SEEN_KEY)) setTourOpen(true);
+  }, []);
+
+  const closeTour = useCallback(() => {
+    setTourOpen(false);
+    localStorage.setItem(TOUR_SEEN_KEY, "seen");
+  }, []);
 
   const load = useCallback(async () => {
     try {
@@ -47,6 +66,9 @@ export function Room() {
     } catch {
       setError("The room could not be opened — is the backend running on :8000?");
     }
+    // Progress for the Altar dashboard — non-critical, so failures don't close the room.
+    api.readingToday().then(setReadingToday).catch(() => setReadingToday(null));
+    api.prayerToday().then(setPrayerToday).catch(() => setPrayerToday(null));
   }, []);
 
   useEffect(() => {
@@ -130,6 +152,14 @@ export function Room() {
     () => encounters.filter((e) => e.stage === "witnessed"),
     [encounters],
   );
+  // Every word still on its way to the Altar, across all seasons — the dashboard count.
+  const wordsInFlight = useMemo(
+    () =>
+      encounters.filter(
+        (e) => (e.stage === "received" || e.stage === "reflecting") && !e.is_cornerstone,
+      ).length,
+    [encounters],
+  );
 
   const receive = async (scripture: string, words: string, scriptureText?: string) => {
     await api.createEncounter({
@@ -187,24 +217,25 @@ export function Room() {
         )}
 
         {/* The threshold — the full entrance hero, shown until you step into the room. */}
-        {!entered && <RoomAccordion onEnter={enterRoom} />}
+        {!entered && <RoomAccordion onEnter={enterRoom} onTour={() => setTourOpen(true)} />}
 
-        {/* The wall you face on entry. */}
+        {/* Home — the Altar you face: progress, cornerstones, and the season's crossing. */}
         <Reveal id="station-altar" className="scroll-mt-24">
-          <Altar cornerstones={cornerstones} onThreshold={setSeed} />
+          <Altar
+            cornerstones={cornerstones}
+            onThreshold={setSeed}
+            wordsInFlight={wordsInFlight}
+            season={openSeason}
+            hasOpenSeason={openSeasonId !== null}
+            onBeginRitual={() => setRitualOpen(true)}
+            reading={readingToday ?? undefined}
+            watch={prayerToday ?? undefined}
+          />
         </Reveal>
 
-        {/* The working band: Shelves · Desk · Wall — equal-height furniture on one
-            baseline, settling in left-to-right as the band scrolls into view. */}
-        <div className="grid items-stretch gap-6 lg:grid-cols-[1fr_1.4fr_1fr]">
-          <Reveal id="station-shelves" className="h-full scroll-mt-24" delay={0}>
-            <Shelves
-              seasons={seasons}
-              hasOpenSeason={openSeasonId !== null}
-              onBeginRitual={() => setRitualOpen(true)}
-            />
-          </Reveal>
-          <Reveal id="station-desk" className="h-full scroll-mt-24" delay={120}>
+        {/* The two stations you work in: the Desk (primary) and the Wall (second). */}
+        <div className="grid items-stretch gap-6 lg:grid-cols-[1.5fr_1fr]">
+          <Reveal id="station-desk" className="h-full scroll-mt-24" delay={0}>
             <Desk
               active={deskActive}
               seed={seed}
@@ -213,15 +244,31 @@ export function Room() {
               onReadingComplete={load}
             />
           </Reveal>
-          <Reveal id="station-wall" className="h-full scroll-mt-24" delay={240}>
-            <Wall declarations={declarations} confessions={confessions} />
+          <Reveal id="station-wall" className="h-full scroll-mt-24" delay={120}>
+            <Wall
+              declarations={declarations}
+              confessions={confessions}
+              cornerstones={cornerstones}
+            />
           </Reveal>
         </div>
 
-        {/* The view outward — framed like a window in the wall, not a full-width band. */}
-        <Reveal id="station-window" className="mx-auto w-full max-w-3xl scroll-mt-24">
-          <Window testimonies={testimonies} />
-        </Reveal>
+        {/* The Shelves surface only when words are on their way — the season they're joining. */}
+        {deskActive.length > 0 && (
+          <Reveal id="station-shelves" className="mx-auto w-full max-w-3xl scroll-mt-24">
+            <p className="mb-2 text-center text-[0.65rem] uppercase tracking-[0.3em] text-stone/60">
+              Where these words are gathering
+            </p>
+            <Shelves seasons={seasons} />
+          </Reveal>
+        )}
+
+        {/* The Window opens only when there is testimony to encourage by. */}
+        {testimonies.length > 0 && (
+          <Reveal id="station-window" className="mx-auto w-full max-w-3xl scroll-mt-24">
+            <Window testimonies={testimonies} />
+          </Reveal>
+        )}
 
         <p className="pt-2 text-center text-xs uppercase tracking-[0.3em] text-stone/60">
           The Word and the Way
@@ -236,6 +283,16 @@ export function Room() {
         onClose={() => setRitualOpen(false)}
         onComplete={completeRitual}
       />
+
+      {/* The first walk through the room — once on arrival, re-openable from the entrance. */}
+      {tourOpen && (
+        <RoomTour
+          hasShelves={deskActive.length > 0}
+          hasWindow={testimonies.length > 0}
+          onRequestEnter={() => setEntered(true)}
+          onClose={closeTour}
+        />
+      )}
     </div>
   );
 }

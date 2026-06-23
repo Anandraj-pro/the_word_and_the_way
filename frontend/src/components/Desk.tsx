@@ -64,7 +64,7 @@ export function Desk({ active, seed, onReceive, onCarry, onReadingComplete }: De
   };
 
   return (
-    <Station label="The Desk" subtitle="Receive · Reflect">
+    <Station label="The Desk" subtitle="Daily devotions">
       {/* Today — the daily rhythm, kept quiet so the Receive action leads. */}
       <div className="mb-5 divide-y divide-stone/15 rounded-sm border border-stone/15 bg-linen-deep/30 px-4">
         <DailyReading onComplete={onReadingComplete} />
