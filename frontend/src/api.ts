@@ -106,17 +106,57 @@ export interface Passage {
   next_reference: string | null;
 }
 
-/** Today's reading on the Desk — the daily Bible-reading rhythm. */
+/** Today's reading on the Desk — the goal's next chapter, its pace, and the streak. */
 export interface ReadingToday {
   status: "to_read" | "done_today" | "plan_complete";
-  day_index: number | null;
   reference: string | null;
   text: string | null;
   translation: string | null;
-  total: number;
-  completed: number;
-  streak: number;
+  total: number; // chapters in the goal
+  completed: number; // distinct goal chapters read
+  streak: number; // consecutive periods the pace was met
+  pace_count: number;
+  pace_unit: "day" | "week";
+  read_this_period: number;
+  pace_met: boolean;
+  goal_label: string;
+  read_today_refs: string[];
   next_reference: string | null;
+}
+
+/** A reading goal — a book or chapter range, read at a chosen pace. */
+export interface ReadingGoal {
+  id: number;
+  book: string;
+  start_chapter: number;
+  end_chapter: number;
+  pace_count: number;
+  pace_unit: "day" | "week";
+  label: string;
+}
+
+export interface ReadingGoalSet {
+  book: string;
+  start_chapter: number;
+  end_chapter: number;
+  pace_count: number;
+  pace_unit: "day" | "week";
+}
+
+/** A chapter kept on a given day — one row of the reading look-back. */
+export interface ReadingHistoryEntry {
+  reference: string;
+  completed_on: string;
+  on_plan: boolean;
+  became_encounter: boolean;
+}
+
+/** The recent reading log — what was covered over a window of days. */
+export interface ReadingHistory {
+  days: number;
+  days_read: number;
+  chapters: number;
+  entries: ReadingHistoryEntry[];
 }
 
 async function http<T>(path: string, init?: RequestInit): Promise<T> {
@@ -160,6 +200,10 @@ export const api = {
   passage: (reference: string) =>
     http<Passage>(`/scripture/passage?reference=${encodeURIComponent(reference)}`),
   readingToday: () => http<ReadingToday>("/reading/today"),
+  readingHistory: (days = 7) => http<ReadingHistory>(`/reading/history?days=${days}`),
+  readingGoal: () => http<ReadingGoal | null>("/reading/goal"),
+  setReadingGoal: (goal: ReadingGoalSet) =>
+    http<ReadingGoal>("/reading/goal", { method: "POST", body: JSON.stringify(goal) }),
   completeReading: (response?: string, reference?: string) =>
     http<ReadingToday>("/reading/complete", {
       method: "POST",

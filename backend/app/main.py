@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from sqlalchemy import select
+from sqlalchemy import inspect, select, text
 
 from . import rag
 from .confessions_loader import load_confessions
@@ -19,13 +19,26 @@ from .routers import confessions, encounters, prayer, reading, scripture, season
 from .seed import seed_if_empty
 
 
+def _migrate_reading_goal(engine) -> None:
+    """Add reading_log.goal_id to a database created before reading goals existed.
+
+    `create_all` makes new tables but never alters existing ones, so an older `reading_log`
+    needs the column added by hand — a no-op once it's there.
+    """
+    columns = {c["name"] for c in inspect(engine).get_columns("reading_log")}
+    if "goal_id" not in columns:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE reading_log ADD COLUMN goal_id INTEGER"))
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
+    _migrate_reading_goal(engine)  # add goal_id to existing reading_log tables
     db = SessionLocal()
     try:
         seed_if_empty(db)
-        reading_service.seed_plan_if_empty(db)  # the daily reading plan
+        reading_service.seed_goal_if_empty(db)  # the standing reading goal
         prayer_service.seed_prayer_if_empty(db)  # the daily prayer watch
         load_confessions(db)  # sync the Wall corpus from disk every startup
         all_confessions = db.scalars(select(Confession)).all()

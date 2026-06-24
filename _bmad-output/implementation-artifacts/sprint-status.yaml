@@ -1,0 +1,90 @@
+# generated: 2026-06-22
+# last_updated: 2026-06-22  # 3-3-war-room-mode → ready-for-dev
+# project: the_word_and_the_way
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STRUCTURE NOTE:
+# ===============
+# Epics here are the ROOM-NATIVE epics (R1-R7) from docs/room-architecture.md, NOT the
+# PRD's 7 feature-epics. See docs/epic-room-reconciliation.md for the full mapping of every
+# PRD story (US-01..US-31) into these stations/stages, the net-new carry/season/testimony
+# work the PRD never specified, and the open tensions.
+#
+# STATUS CAVEAT: No BMAD story files exist yet (the room was built freehand per the north-star
+# doc). Story-level status below is INFERRED from build progress, not file-detected. Treat
+# `done` as "shipped in the freehand build, story file not yet back-filled" and correct as
+# stories are formalized.
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic:   backlog -> in-progress -> done
+# Story:  backlog -> ready-for-dev -> in-progress -> review -> done
+# Retro:  optional <-> done
+
+generated: 2026-06-22
+last_updated: 2026-06-22  # 3-3-war-room-mode → ready-for-dev
+project: the_word_and_the_way
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  # ── R1: Room Shell + Encounter Model (build step 1) ──
+  epic-1: done
+  1-1-encounter-data-model: done          # US-27, US-17, US-21, US-22 — the single spine
+  1-2-spatial-room-layout: done           # one page, Altar entry, four framing stations
+  1-3-progressive-revelation-dimming: done # US-02, US-04 — empty stations dim, not absent
+  epic-1-retrospective: optional
+
+  # ── R2: The Desk -> Altar Loop / Receive·Reflect·Carry (build step 2) ──
+  epic-2: done
+  2-1-receive-rhema-capture: done         # US-06, US-07, US-24 — capture an Encounter at the Desk
+  2-2-reflect-dialogue-journal: done      # US-19, US-20, US-11, US-23
+  2-3-carry-encounter-forward: done       # net-new — carry_count across seasons
+  2-4-cornerstone-altar-inscription: done # net-new — carry_count>=3 inscribes on the Altar
+  2-5-altar-threshold-prayer: done        # US-16 (softened) — "what are you bringing to God"
+  2-6-reading-progress-facet: backlog     # US-05, US-08 — Hebrews tracker (tension: metrics)
+  2-7-spirit-led-next-reading: backlog    # US-09
+  2-8-ollama-verse-suggestions: backlog   # US-10
+  epic-2-retrospective: optional
+
+  # ── R3: The Wall / Declare (build step 3) ──
+  epic-3: in-progress
+  3-1-load-confessions-corpus: done       # docs/confessions_md/ populates the Wall
+  3-2-wall-reading-view: done
+  3-3-war-room-mode: done                 # US-12 — focused declaration/intercession
+  3-4-standard-recurring-prayers: in-progress # US-18
+  epic-3-retrospective: optional
+
+  # ── R4: The Shelves / Archive (build step 4) ──
+  epic-4: backlog
+  4-1-seasons-as-spines: backlog          # net-new — season_id as the organizing lens
+  4-2-browse-encounters-by-season: backlog # US-28 (reframed: season, not date)
+  4-3-personal-verse-library: backlog     # US-25, US-26
+  4-4-on-this-day-surfacing: backlog      # the only place raw date is used
+  epic-4-retrospective: optional
+
+  # ── R5: The Window / Witness (build step 5) ──
+  epic-5: backlog
+  5-1-personal-testimonies: backlog       # US-14, US-15 (reframed: answered prayer = testimony)
+  5-2-witness-from-carried-promise: backlog # net-new — "God kept it"
+  5-3-global-testimony-wall: backlog      # Phase II / TODO
+  epic-5-retrospective: optional
+
+  # ── R6: Lighting / Three-Watch + Seasonal Skin (build step 6) ──
+  epic-6: backlog
+  6-1-three-watch-palette: backlog        # hour-of-day palette/type shift
+  6-2-seasonal-skin: backlog              # season palette/type shift
+  6-3-prophetic-altar-greeting: backlog   # US-01 (fed by US-29 name/title)
+  epic-6-retrospective: optional
+
+  # ── R7: Settings & Ollama (cross-cutting) ──
+  epic-7: backlog
+  7-1-display-name-and-title: backlog     # US-29
+  7-2-export-sqlite-backup: backlog       # US-30
+  7-3-ollama-detection: backlog           # US-31
+  7-4-promise-surfacer: backlog           # net-new — Ollama surfaces a carried promise
+  7-5-ollama-theme-inference: backlog     # US-13 (reframed: inferred, not hand-tagged)
+  epic-7-retrospective: optional

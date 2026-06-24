@@ -116,15 +116,54 @@ class PassageRead(BaseModel):
 
 # ---- Daily reading (the Desk) ----
 class ReadingToday(BaseModel):
-    status: str  # "to_read" | "done_today" | "plan_complete"
-    day_index: int | None = None
-    reference: str | None = None
+    status: str  # "to_read" | "done_today" | "plan_complete"  (plan_complete = goal done)
+    reference: str | None = None  # the goal's next unread chapter (or the last, when done)
     text: str | None = None
     translation: str | None = None
-    total: int
-    completed: int
-    streak: int
-    next_reference: str | None = None
+    total: int  # chapters in the goal
+    completed: int  # distinct goal chapters read
+    streak: int  # consecutive periods the pace was met
+    pace_count: int  # chapters per period
+    pace_unit: str  # "day" | "week"
+    read_this_period: int  # goal chapters read this day/week
+    pace_met: bool  # this period's quota is met
+    goal_label: str  # e.g. "James 1–5"
+    read_today_refs: list[str] = []  # goal chapters already kept today (for the reader)
+    next_reference: str | None = None  # the chapter after `reference`, a look-ahead
+
+
+class ReadingGoalRead(BaseModel):
+    id: int
+    book: str
+    start_chapter: int
+    end_chapter: int
+    pace_count: int
+    pace_unit: str
+    label: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ReadingGoalSet(BaseModel):
+    book: str
+    start_chapter: int = 1
+    end_chapter: int
+    pace_count: int = 1
+    pace_unit: str = "day"  # "day" | "week"
+
+
+class ReadingHistoryEntry(BaseModel):
+    reference: str
+    completed_on: date
+    on_plan: bool  # advanced the plan, vs. a free reading that only kept the streak
+    became_encounter: bool
+
+
+class ReadingHistory(BaseModel):
+    days: int  # the window looked back over
+    days_read: int  # distinct calendar days with a reading in that window
+    chapters: int  # total chapters read in the window
+    entries: list[ReadingHistoryEntry]
 
 
 class ReadingComplete(BaseModel):

@@ -127,15 +127,42 @@ class ReadingPlanEntry(Base):
     reference: Mapped[str] = mapped_column(String(120))
 
 
+class ReadingGoal(Base):
+    """A reading goal — a book (or a range of its chapters), read at a chosen pace.
+
+    Scope is one book, `start_chapter`..`end_chapter` inclusive. Pace is `pace_count`
+    chapters per `pace_unit` ("day" or "week"); the streak counts periods the pace was met.
+    One goal is `active` at a time; setting a new goal retires the old.
+    """
+
+    __tablename__ = "reading_goal"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    book: Mapped[str] = mapped_column(String(60))
+    start_chapter: Mapped[int] = mapped_column(Integer)
+    end_chapter: Mapped[int] = mapped_column(Integer)
+    pace_count: Mapped[int] = mapped_column(Integer, default=1)
+    pace_unit: Mapped[str] = mapped_column(String(8), default="day")  # "day" | "week"
+    active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
 class ReadingLog(Base):
-    """A completed reading — what was read, on which calendar day, and the word it became."""
+    """A completed reading — what was read, on which calendar day, and the word it became.
+
+    A reading counts toward a goal when `goal_id` is set (the chapter fell in the goal's
+    scope); a free reading off any goal leaves it null but still appears in the look-back.
+    """
 
     __tablename__ = "reading_log"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    day_index: Mapped[int] = mapped_column(Integer, index=True)
+    day_index: Mapped[int] = mapped_column(Integer, index=True, default=0)  # legacy plan order
     reference: Mapped[str] = mapped_column(String(120))
     completed_on: Mapped[date] = mapped_column(Date, default=date.today, index=True)
+    goal_id: Mapped[int | None] = mapped_column(
+        ForeignKey("reading_goal.id"), default=None, index=True
+    )
     encounter_id: Mapped[int | None] = mapped_column(
         ForeignKey("encounters.id"), default=None
     )

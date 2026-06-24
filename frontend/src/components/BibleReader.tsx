@@ -5,18 +5,21 @@ import { type Book, NEW_TESTAMENT, OLD_TESTAMENT } from "../bibleBooks";
 
 interface BibleReaderProps {
   initialReference: string; // where to open — today's chapter (resume)
-  todayReference: string | null; // the plan's current reading; receive is offered here
-  alreadyReadToday: boolean;
+  todayReference: string | null; // the goal's current chapter; receive is offered here
+  readTodayRefs?: string[]; // chapters already kept today — shown as read, not offered again
   startPicking?: boolean; // open straight into the book/chapter picker (free reading)
   onComplete: () => void; // a reading became an Encounter
   onClose: () => void;
 }
 
+/** Loose key so "James  1" and "James 1" mark the same chapter. */
+const normRef = (r: string) => r.trim().replace(/\s+/g, " ").toLowerCase();
+
 /** The book — a chapter read verse by verse, with a book/chapter picker and chapter nav. */
 export function BibleReader({
   initialReference,
   todayReference,
-  alreadyReadToday,
+  readTodayRefs = [],
   startPicking = false,
   onComplete,
   onClose,
@@ -27,7 +30,9 @@ export function BibleReader({
   const [edgeNote, setEdgeNote] = useState<string>();
   const [response, setResponse] = useState("");
   const [marking, setMarking] = useState(false);
-  const [readToday, setReadToday] = useState(alreadyReadToday);
+  // Which chapters are kept today — each chapter keeps its own mark, so reading one doesn't
+  // hide the affordance on the next. Seeded with what was already kept today.
+  const [readRefs, setReadRefs] = useState<Set<string>>(() => new Set(readTodayRefs.map(normRef)));
   const [picking, setPicking] = useState(startPicking);
   const [pickBook, setPickBook] = useState<Book | null>(null);
 
@@ -65,7 +70,8 @@ export function BibleReader({
     };
   }, []);
 
-  const onToday = todayReference !== null && ref === todayReference;
+  const onToday = todayReference !== null && normRef(ref) === normRef(todayReference);
+  const readToday = readRefs.has(normRef(ref));
 
   const markRead = async () => {
     if (marking) return;
@@ -74,7 +80,7 @@ export function BibleReader({
       // Pass the chapter actually open — the plan's chapter advances the plan; any other
       // chapter is logged as a free reading that still keeps today's streak.
       await api.completeReading(response.trim() || undefined, ref);
-      setReadToday(true);
+      setReadRefs((prev) => new Set(prev).add(normRef(ref)));
       setResponse("");
       onComplete();
     } finally {

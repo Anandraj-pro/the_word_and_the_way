@@ -11,6 +11,7 @@ import requests
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from . import canon
 from .models import ScriptureCache
 
 BIBLE_API = "https://bible-api.com"
@@ -97,16 +98,41 @@ _CHAPTER_RE = re.compile(r"^\s*(.+?)\s+(\d+)\s*$")
 def chapter_neighbors(reference: str) -> tuple[str | None, str | None]:
     """Previous/next chapter references for a whole-chapter reference like 'John 1'.
 
-    Stays within the book (the reading plan never crosses one). Returns (prev, next);
-    `prev` is None at chapter 1. `next` is always offered — the caller learns the book
-    has ended when that lookup 404s.
+    Rolls across books: the last chapter of a book points to the next book's first chapter,
+    and the first chapter back to the previous book's last. Returns (prev, next); `prev` is
+    None at Genesis 1 and `next` is None at Revelation 22 — the ends of the canon.
+
+    For a reference whose book isn't in the canon, falls back to naive ±1 within the book
+    (prev None at chapter 1) and lets a 404 mark the book's end.
     """
     m = _CHAPTER_RE.match(reference or "")
     if not m or ":" in (reference or ""):
         return None, None
     book, chapter = m.group(1), int(m.group(2))
-    prev_ref = f"{book} {chapter - 1}" if chapter > 1 else None
-    return prev_ref, f"{book} {chapter + 1}"
+
+    index = canon.book_index(book)
+    if index is None:  # unknown book — keep the old best-effort behavior
+        prev_ref = f"{book} {chapter - 1}" if chapter > 1 else None
+        return prev_ref, f"{book} {chapter + 1}"
+
+    name, last = canon.BOOKS[index]
+
+    if chapter > 1:
+        prev_ref = f"{name} {chapter - 1}"
+    elif index > 0:  # first chapter — step back to the previous book's last chapter
+        prev_name, prev_last = canon.BOOKS[index - 1]
+        prev_ref = f"{prev_name} {prev_last}"
+    else:
+        prev_ref = None  # Genesis 1
+
+    if chapter < last:
+        next_ref = f"{name} {chapter + 1}"
+    elif index < len(canon.BOOKS) - 1:  # last chapter — step into the next book's first
+        next_ref = f"{canon.BOOKS[index + 1][0]} 1"
+    else:
+        next_ref = None  # Revelation 22
+
+    return prev_ref, next_ref
 
 
 def lookup_passage(db: Session, reference: str, translation: str = DEFAULT_TRANSLATION) -> dict | None:

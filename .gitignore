@@ -9,8 +9,17 @@ __pycache__/
 backend/the_word_and_the_way.db
 backend/chroma_db/
 
+# Node / frontend build artifacts
+node_modules/
+frontend/dist/
+*.tsbuildinfo
+
 # Raw source files (binary originals — large, not code)
 docs/confessions_raw/
+
+# IDE & tooling runtime
+.idea/
+.playwright-mcp/
 
 # OS
 .DS_Store
