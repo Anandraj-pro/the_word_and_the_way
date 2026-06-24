@@ -194,6 +194,7 @@ export const api = {
     }),
   keptVerses: (reference: string) =>
     http<number[]>(`/encounters/kept-verses?reference=${encodeURIComponent(reference)}`),
+  dwelling: () => http<Encounter[]>("/encounters/dwelling"),
   seasons: () => http<Season[]>("/seasons"),
   openSeason: (body: SeasonOpen) =>
     http<Season>("/seasons", { method: "POST", body: JSON.stringify(body) }),

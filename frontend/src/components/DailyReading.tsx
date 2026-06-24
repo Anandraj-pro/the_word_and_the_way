@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { api, type ReadingGoal, type ReadingHistory, type ReadingToday } from "../api";
+import {
+  api,
+  type Encounter,
+  type ReadingGoal,
+  type ReadingHistory,
+  type ReadingToday,
+} from "../api";
 import { ALL_BOOKS } from "../bibleBooks";
 import { BibleReader } from "./BibleReader";
 
@@ -7,6 +13,11 @@ import { BibleReader } from "./BibleReader";
 function dayLabel(iso: string): string {
   const d = new Date(`${iso}T00:00:00`);
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+/** "John 3:16" -> "John 3" — the chapter a kept verse lives in, to reopen the reader there. */
+function chapterOf(verseRef: string): string {
+  return verseRef.split(":")[0].trim();
 }
 
 /**
@@ -25,6 +36,8 @@ export function DailyReading({ onComplete }: { onComplete: () => void }) {
   const [failed, setFailed] = useState(false); // today's reading couldn't be reached
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(false); // setting the goal didn't take
+  const [dwelling, setDwelling] = useState<Encounter[]>([]); // verses kept to meditate on
+  const [jumpRef, setJumpRef] = useState<string | null>(null); // open the reader at this chapter
 
   // Goal form fields.
   const [book, setBook] = useState("John");
@@ -46,6 +59,11 @@ export function DailyReading({ onComplete }: { onComplete: () => void }) {
       setGoal(await api.readingGoal());
     } catch {
       setGoal(null);
+    }
+    try {
+      setDwelling(await api.dwelling());
+    } catch {
+      setDwelling([]);
     }
   }, []);
 
@@ -333,11 +351,53 @@ export function DailyReading({ onComplete }: { onComplete: () => void }) {
             )}
           </div>
         )}
+
+        {/* Dwelling on — verses kept to meditate on; tap one to reopen its chapter. */}
+        {dwelling.length > 0 && (
+          <div className="mt-3 border-t border-stone/15 pt-2.5">
+            <p className="mb-1 flex items-center gap-1.5 text-[0.65rem] uppercase tracking-[0.2em] text-stone/55">
+              ✦ Dwelling on
+            </p>
+            <ul className="flex flex-col gap-1">
+              {dwelling.map((e) => (
+                <li key={e.id}>
+                  <button
+                    onClick={() => {
+                      if (e.scripture) {
+                        setJumpRef(chapterOf(e.scripture));
+                        setReading(true);
+                      }
+                    }}
+                    className="group flex w-full items-baseline gap-2 text-left"
+                    title="Reopen this chapter"
+                  >
+                    <span className="shrink-0 font-display text-sm text-terracotta-deep group-hover:text-terracotta">
+                      {e.scripture}
+                    </span>
+                    {e.scripture_text && (
+                      <span className="truncate font-serif text-xs italic text-stone/65">
+                        “{e.scripture_text}”
+                      </span>
+                    )}
+                    {e.carry_count > 0 && (
+                      <span
+                        className="shrink-0 text-[0.6rem] text-terracotta/70"
+                        title={`Carried ${e.carry_count} of 3 toward the Altar`}
+                      >
+                        {"✦".repeat(e.carry_count)}
+                      </span>
+                    )}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
-      {(reading || browsing) && today.reference && (
+      {(reading || browsing) && (jumpRef ?? today.reference) && (
         <BibleReader
-          initialReference={today.reference}
+          initialReference={jumpRef ?? today.reference!}
           todayReference={today.reference}
           readTodayRefs={today.read_today_refs}
           startPicking={browsing}
@@ -345,6 +405,7 @@ export function DailyReading({ onComplete }: { onComplete: () => void }) {
           onClose={() => {
             setReading(false);
             setBrowsing(false);
+            setJumpRef(null);
           }}
         />
       )}

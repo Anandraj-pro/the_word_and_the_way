@@ -93,6 +93,20 @@ def keep_verse(payload: EncounterKeep, db: Session = Depends(get_db)):
     return encounter
 
 
+@router.get("/dwelling", response_model=list[EncounterRead])
+def dwelling(db: Session = Depends(get_db)):
+    """Verses still being meditated on — a verse-level scripture, carried but not yet a
+    cornerstone. The 'dwelling on' strip at the Desk. Newest first."""
+    stmt = (
+        select(Encounter)
+        .where(Encounter.scripture.like("%:%"))  # a verse ref ("John 3:16"), not a chapter
+        .where(Encounter.stage.in_([Stage.received, Stage.reflecting]))
+        .where(Encounter.carry_count < CORNERSTONE_CARRY_THRESHOLD)
+        .order_by(Encounter.received_on.desc(), Encounter.id.desc())
+    )
+    return db.scalars(stmt).all()
+
+
 @router.get("/{encounter_id}", response_model=EncounterRead)
 def get_encounter(encounter_id: int, db: Session = Depends(get_db)):
     encounter = db.get(Encounter, encounter_id)
