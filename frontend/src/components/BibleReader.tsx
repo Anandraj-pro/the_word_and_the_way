@@ -35,14 +35,27 @@ export function BibleReader({
   const [readRefs, setReadRefs] = useState<Set<string>>(() => new Set(readTodayRefs.map(normRef)));
   const [picking, setPicking] = useState(startPicking);
   const [pickBook, setPickBook] = useState<Book | null>(null);
+  // Verses kept for meditation in this chapter (numbers), the one being considered, and its note.
+  const [keptVerses, setKeptVerses] = useState<Set<number>>(new Set());
+  const [selectedVerse, setSelectedVerse] = useState<number | null>(null);
+  const [verseNote, setVerseNote] = useState("");
+  const [keeping, setKeeping] = useState(false);
 
   const fetchPassage = useCallback(async (reference: string) => {
     setLoading(true);
     setEdgeNote(undefined);
+    setSelectedVerse(null);
+    setVerseNote("");
     try {
       const p = await api.passage(reference);
       setPassage(p);
       setRef(p.reference);
+      // Which verses here are already kept — for the highlight on re-read.
+      try {
+        setKeptVerses(new Set(await api.keptVerses(p.reference)));
+      } catch {
+        setKeptVerses(new Set());
+      }
     } catch {
       // A 404 here means we paged past the last chapter of the book.
       setEdgeNote("That's the end of the book.");
@@ -85,6 +98,28 @@ export function BibleReader({
       onComplete();
     } finally {
       setMarking(false);
+    }
+  };
+
+  const selectedText =
+    selectedVerse !== null ? passage?.verses.find((v) => v.verse === selectedVerse)?.text : undefined;
+
+  // Keep a single verse — it becomes a received Encounter in the open season, ready to carry.
+  const keepVerse = async () => {
+    if (selectedVerse === null || keeping || !passage) return;
+    setKeeping(true);
+    try {
+      await api.keepVerse(
+        `${passage.reference}:${selectedVerse}`,
+        selectedText,
+        verseNote.trim() || undefined,
+      );
+      setKeptVerses((prev) => new Set(prev).add(selectedVerse));
+      setSelectedVerse(null);
+      setVerseNote("");
+      onComplete(); // the kept verse lands on the Desk to be carried toward the Altar
+    } finally {
+      setKeeping(false);
     }
   };
 
@@ -183,14 +218,30 @@ export function BibleReader({
               <p className="font-serif text-sm italic text-stone">{edgeNote}</p>
             ) : (
               <p className="font-serif text-[1.05rem] leading-loose text-ink">
-                {passage?.verses.map((v) => (
-                  <span key={v.verse ?? Math.random()}>
-                    <sup className="mr-0.5 align-super text-[0.6rem] font-medium text-terracotta">
-                      {v.verse}
-                    </sup>
-                    <span>{v.text} </span>
-                  </span>
-                ))}
+                {passage?.verses.map((v) => {
+                  const kept = v.verse != null && keptVerses.has(v.verse);
+                  const selected = v.verse != null && selectedVerse === v.verse;
+                  return (
+                    <span
+                      key={v.verse ?? Math.random()}
+                      onClick={() =>
+                        v.verse != null && setSelectedVerse(selected ? null : v.verse)
+                      }
+                      className={`cursor-pointer rounded-sm px-0.5 transition-colors ${
+                        selected
+                          ? "bg-terracotta/25"
+                          : kept
+                            ? "bg-terracotta/10 hover:bg-terracotta/20"
+                            : "hover:bg-stone/10"
+                      }`}
+                    >
+                      <sup className="mr-0.5 align-super text-[0.6rem] font-medium text-terracotta">
+                        {v.verse}
+                      </sup>
+                      <span>{v.text} </span>
+                    </span>
+                  );
+                })}
               </p>
             )}
           </div>
@@ -219,9 +270,56 @@ export function BibleReader({
           </button>
         </div>
 
+        {/* Keep a verse — tap one above to dwell on it; it joins the carry loop. */}
+        {selectedVerse !== null && passage && (
+          <div className="mt-4 flex shrink-0 flex-col gap-2 rounded-sm border border-terracotta/30 bg-linen-deep/60 px-4 py-3">
+            <p className="font-display text-sm text-terracotta-deep">
+              {passage.reference}:{selectedVerse}
+              {keptVerses.has(selectedVerse) && (
+                <span className="ml-2 font-serif text-xs italic text-stone/60">already kept</span>
+              )}
+            </p>
+            {selectedText && (
+              <p className="font-serif text-sm italic leading-snug text-ink/80">“{selectedText}”</p>
+            )}
+            <textarea
+              value={verseNote}
+              onChange={(e) => setVerseNote(e.target.value)}
+              placeholder="a word to keep with it, if one came…"
+              rows={2}
+              className="resize-none border-b border-stone/30 bg-transparent pb-1 font-serif text-sm leading-snug text-ink placeholder:text-stone/55 focus:border-terracotta focus:outline-none"
+            />
+            <div className="flex items-center gap-3">
+              <button
+                onClick={keepVerse}
+                disabled={keeping}
+                className="self-start rounded-sm bg-terracotta px-4 py-1.5 font-serif text-sm text-linen transition-colors hover:bg-terracotta-deep disabled:opacity-50"
+              >
+                {keeping ? "Keeping…" : "✦ Keep this verse"}
+              </button>
+              <button
+                onClick={() => {
+                  setSelectedVerse(null);
+                  setVerseNote("");
+                }}
+                className="font-serif text-xs italic text-stone/60 hover:text-terracotta-deep"
+              >
+                cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* A quiet hint that verses can be kept — only when nothing is selected. */}
+        {selectedVerse === null && passage && !edgeNote && (
+          <p className="mt-2 shrink-0 text-center text-[0.65rem] italic text-stone/45">
+            tap a verse to keep it for meditation
+          </p>
+        )}
+
         {/* Receive — mark any chapter as today's reading; off-plan chapters keep the
             streak without consuming the John plan. */}
-        {!readToday && passage && !edgeNote && (
+        {selectedVerse === null && !readToday && passage && !edgeNote && (
           <div className="mt-4 flex shrink-0 flex-col gap-2 rounded-sm bg-linen-deep/50 px-4 py-3">
             {!onToday && todayReference && (
               <p className="font-serif text-xs italic text-stone/60">

@@ -51,6 +51,14 @@ class EncounterCreate(EncounterBase):
     pass
 
 
+class EncounterKeep(BaseModel):
+    """Keep a single verse to meditate on — it becomes a received Encounter in the open season."""
+
+    scripture: str  # a verse reference, e.g. "John 3:16"
+    scripture_text: str | None = None
+    words: str | None = None  # an optional word kept with it
+
+
 class EncounterUpdate(BaseModel):
     """All optional — patch any facet, including advancing the stage."""
 

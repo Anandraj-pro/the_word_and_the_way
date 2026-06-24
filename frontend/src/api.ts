@@ -183,6 +183,17 @@ export const api = {
     http<Encounter>("/encounters", { method: "POST", body: JSON.stringify(body) }),
   carry: (id: number) =>
     http<Encounter>(`/encounters/${id}/carry`, { method: "POST" }),
+  keepVerse: (scripture: string, scriptureText?: string, words?: string) =>
+    http<Encounter>("/encounters/keep", {
+      method: "POST",
+      body: JSON.stringify({
+        scripture,
+        scripture_text: scriptureText ?? null,
+        words: words ?? null,
+      }),
+    }),
+  keptVerses: (reference: string) =>
+    http<number[]>(`/encounters/kept-verses?reference=${encodeURIComponent(reference)}`),
   seasons: () => http<Season[]>("/seasons"),
   openSeason: (body: SeasonOpen) =>
     http<Season>("/seasons", { method: "POST", body: JSON.stringify(body) }),
