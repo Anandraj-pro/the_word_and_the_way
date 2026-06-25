@@ -24,6 +24,11 @@ along a single path: **Receive → Reflect → Declare → Carry → Witness**.
 Pydantic v2 · SQLite  ·  local RAG via ChromaDB + Ollama. Offline-first — no cloud, no
 external dependencies at runtime.
 
+![The Altar of Remembrance — the wall you face on entry](docs/room-altar.png)
+
+> _The Altar you face on entry: cornerstone promises carried season by season, the season's
+> progress, and the threshold prayer line._
+
 ---
 
 ## The room, settling in
@@ -109,6 +114,11 @@ entries into ChromaDB — all safe to re-run.
 ---
 
 ## Selected features
+
+![The Desk and the Wall — the two stations you work in](docs/room-desk.png)
+
+> _The two stations you work in: the **Desk** (reading goal, the "Dwelling on" kept verses,
+> the daily Watch, and words being carried) and the **Wall** (searchable declarations)._
 
 - **Daily reading with configurable goals** — choose a book/chapter range and a pace
   (chapters per day or week); pace-aware streak; cross-book navigation; a weekly look-back.
