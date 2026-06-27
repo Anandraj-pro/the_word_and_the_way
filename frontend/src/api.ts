@@ -46,6 +46,7 @@ export interface Season {
   opened_on: string;
   closed_on: string | null;
   is_open: boolean;
+  encounter_count: number; // the weight the season holds — count of its Encounters
 }
 
 /** Opening the first season (when none is open). */

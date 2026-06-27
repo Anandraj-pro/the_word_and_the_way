@@ -35,8 +35,10 @@ export function DailyPrayer() {
 
   // The watch keeps two registers: the standing foci (seeded, never deleted) and the
   // Pastor's own. Order within each is the API's own (standard-first by sort_order).
+  // Anything not standing falls to the personal register, so no focus can slip through
+  // both filters and vanish while still counting toward prayed/total.
   const standard = watch.focuses.filter((f) => f.kind === "standard");
-  const personal = watch.focuses.filter((f) => f.kind === "personal");
+  const personal = watch.focuses.filter((f) => f.kind !== "standard");
 
   const renderFocus = (f: PrayerFocus) => (
     <li key={f.id} className="group flex items-center gap-2.5 py-1">
@@ -65,6 +67,9 @@ export function DailyPrayer() {
           </span>
         )}
       </button>
+      {/* Only the Pastor's own foci are his to retire; standing foci are retired
+          server-side, so the ✕ stays gated on "personal" even though the personal
+          register catches everything that isn't standing. */}
       {f.kind === "personal" && (
         <button
           onClick={() => remove(f.id)}
@@ -133,37 +138,37 @@ export function DailyPrayer() {
             </section>
           )}
 
-      {adding ? (
-        <div className="mt-2 flex flex-col gap-1.5">
-          <input
-            value={label}
-            onChange={(e) => setLabel(e.target.value)}
-            placeholder="A person or burden to carry…"
-            autoFocus
-            className="border-b border-stone/30 bg-transparent pb-1 font-serif text-sm text-ink placeholder:text-stone/55 focus:border-terracotta focus:outline-none"
-          />
-          <input
-            value={scripture}
-            onChange={(e) => setScripture(e.target.value)}
-            placeholder="A verse to pray over it, optional…"
-            className="border-b border-stone/30 bg-transparent pb-1 font-serif text-xs text-stone placeholder:text-stone/45 focus:border-terracotta focus:outline-none"
-          />
-          <div className="flex gap-2">
-            <button
-              onClick={submitFocus}
-              className="self-start rounded-sm bg-terracotta px-3 py-1 font-serif text-xs text-linen hover:bg-terracotta-deep"
-            >
-              Add to the watch
-            </button>
-            <button
-              onClick={() => setAdding(false)}
-              className="text-xs italic text-stone/60 hover:text-terracotta-deep"
-            >
-              cancel
-            </button>
-          </div>
-        </div>
-      ) : (
+          {adding ? (
+            <div className="mt-2 flex flex-col gap-1.5">
+              <input
+                value={label}
+                onChange={(e) => setLabel(e.target.value)}
+                placeholder="A person or burden to carry…"
+                autoFocus
+                className="border-b border-stone/30 bg-transparent pb-1 font-serif text-sm text-ink placeholder:text-stone/55 focus:border-terracotta focus:outline-none"
+              />
+              <input
+                value={scripture}
+                onChange={(e) => setScripture(e.target.value)}
+                placeholder="A verse to pray over it, optional…"
+                className="border-b border-stone/30 bg-transparent pb-1 font-serif text-xs text-stone placeholder:text-stone/45 focus:border-terracotta focus:outline-none"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={submitFocus}
+                  className="self-start rounded-sm bg-terracotta px-3 py-1 font-serif text-xs text-linen hover:bg-terracotta-deep"
+                >
+                  Add to the watch
+                </button>
+                <button
+                  onClick={() => setAdding(false)}
+                  className="text-xs italic text-stone/60 hover:text-terracotta-deep"
+                >
+                  cancel
+                </button>
+              </div>
+            </div>
+          ) : (
             <button
               onClick={() => setAdding(true)}
               className="mt-1.5 text-xs italic text-stone/60 transition-colors hover:text-terracotta-deep"

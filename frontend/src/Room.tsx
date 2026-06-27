@@ -253,13 +253,13 @@ export function Room() {
           </Reveal>
         </div>
 
-        {/* The Shelves surface only when words are on their way — the season they're joining. */}
-        {deskActive.length > 0 && (
+        {/* The Shelves stand as the Archive — open a season's spine to read what it held. */}
+        {seasons.length > 0 && (
           <Reveal id="station-shelves" className="mx-auto w-full max-w-3xl scroll-mt-24">
             <p className="mb-2 text-center text-[0.65rem] uppercase tracking-[0.3em] text-stone/60">
-              Where these words are gathering
+              The seasons you have kept
             </p>
-            <Shelves seasons={seasons} />
+            <Shelves seasons={seasons} encounters={encounters} />
           </Reveal>
         )}
 
@@ -287,7 +287,7 @@ export function Room() {
       {/* The first walk through the room — once on arrival, re-openable from the entrance. */}
       {tourOpen && (
         <RoomTour
-          hasShelves={deskActive.length > 0}
+          hasShelves={seasons.length > 0}
           hasWindow={testimonies.length > 0}
           onRequestEnter={() => setEntered(true)}
           onClose={closeTour}

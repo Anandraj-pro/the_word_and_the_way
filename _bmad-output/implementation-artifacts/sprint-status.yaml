@@ -1,5 +1,5 @@
 # generated: 2026-06-22
-# last_updated: 2026-06-22  # 3-3-war-room-mode → ready-for-dev
+# last_updated: 2026-06-27  # 4-2-browse-encounters-by-season → done (code review passed); epic-4 in-progress (4-3, 4-4 remain)
 # project: the_word_and_the_way
 # project_key: NOKEY
 # tracking_system: file-system
@@ -24,7 +24,7 @@
 # Retro:  optional <-> done
 
 generated: 2026-06-22
-last_updated: 2026-06-22  # 3-3-war-room-mode → ready-for-dev
+last_updated: 2026-06-27  # 4-2-browse-encounters-by-season → done (code review passed); epic-4 in-progress (4-3, 4-4 remain)
 project: the_word_and_the_way
 project_key: NOKEY
 tracking_system: file-system
@@ -51,17 +51,17 @@ development_status:
   epic-2-retrospective: optional
 
   # ── R3: The Wall / Declare (build step 3) ──
-  epic-3: in-progress
+  epic-3: done
   3-1-load-confessions-corpus: done       # docs/confessions_md/ populates the Wall
   3-2-wall-reading-view: done
   3-3-war-room-mode: done                 # US-12 — focused declaration/intercession
-  3-4-standard-recurring-prayers: in-progress # US-18
+  3-4-standard-recurring-prayers: done        # US-18
   epic-3-retrospective: optional
 
   # ── R4: The Shelves / Archive (build step 4) ──
-  epic-4: backlog
-  4-1-seasons-as-spines: backlog          # net-new — season_id as the organizing lens
-  4-2-browse-encounters-by-season: backlog # US-28 (reframed: season, not date)
+  epic-4: in-progress
+  4-1-seasons-as-spines: done             # net-new — season_id as the organizing lens
+  4-2-browse-encounters-by-season: done        # US-28 (reframed: season, not date)
   4-3-personal-verse-library: backlog     # US-25, US-26
   4-4-on-this-day-surfacing: backlog      # the only place raw date is used
   epic-4-retrospective: optional

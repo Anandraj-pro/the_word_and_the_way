@@ -64,6 +64,11 @@ class Season(Base):
     def is_open(self) -> bool:
         return self.closed_on is None
 
+    @property
+    def encounter_count(self) -> int:
+        """How much this season held — the weight on its spine in the Archive."""
+        return len(self.encounters)
+
 
 class Confession(Base):
     """A standing, authored confession — the liturgy the Pastor declares from.

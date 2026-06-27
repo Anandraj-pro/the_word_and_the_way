@@ -25,6 +25,7 @@ class SeasonRead(SeasonBase):
     opened_on: date
     closed_on: date | None = None
     is_open: bool
+    encounter_count: int  # the weight the season holds — count of its Encounters
 
 
 class SeasonCross(BaseModel):

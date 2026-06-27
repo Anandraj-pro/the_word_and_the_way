@@ -15,7 +15,7 @@ interface TourStep {
 }
 
 interface RoomTourProps {
-  /** The Shelves only stand when words are gathering; the Window only when there is testimony. */
+  /** The Shelves stand as the Archive once any season exists; the Window only when there is testimony. */
   hasShelves: boolean;
   hasWindow: boolean;
   /** Collapse the entrance hero so the walk passes through the actual room. */
@@ -60,7 +60,7 @@ export function RoomTour({ hasShelves, hasWindow, onRequestEnter, onClose }: Roo
         eyebrow: "Seasons",
         title: "The Shelves",
         body:
-          "Time kept as seasons. The words you are carrying gather here — what God is doing now, and what He has already brought to a close.",
+          "Time kept as seasons. Open a season's spine to read what it held — the words received, wrestled, and declared in it, and what God has already brought to a close.",
       });
     if (hasWindow)
       walk.push({
