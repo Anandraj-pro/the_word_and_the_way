@@ -1,5 +1,5 @@
 # generated: 2026-06-22
-# last_updated: 2026-06-29  # 4-4 → done (code review passed); epic-4 → done (all R4 stories complete)
+# last_updated: 2026-06-30  # epic-4 retrospective → done (epic-4-retro-2026-06-30.md)
 # project: the_word_and_the_way
 # project_key: NOKEY
 # tracking_system: file-system
@@ -24,7 +24,7 @@
 # Retro:  optional <-> done
 
 generated: 2026-06-22
-last_updated: 2026-06-29  # 4-4 → done (code review passed); epic-4 → done (all R4 stories complete)
+last_updated: 2026-06-30  # epic-4 retrospective → done (epic-4-retro-2026-06-30.md)
 project: the_word_and_the_way
 project_key: NOKEY
 tracking_system: file-system
@@ -64,7 +64,7 @@ development_status:
   4-2-browse-encounters-by-season: done        # US-28 (reframed: season, not date)
   4-3-personal-verse-library: done        # US-25, US-26
   4-4-on-this-day-surfacing: done         # the only place raw date is used
-  epic-4-retrospective: optional
+  epic-4-retrospective: done
 
   # ── R5: The Window / Witness (build step 5) ──
   epic-5: backlog
