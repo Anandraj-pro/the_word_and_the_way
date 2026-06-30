@@ -1,5 +1,5 @@
 # generated: 2026-06-22
-# last_updated: 2026-06-27  # 4-2-browse-encounters-by-season → done (code review passed); epic-4 in-progress (4-3, 4-4 remain)
+# last_updated: 2026-06-29  # 4-4 → done (code review passed); epic-4 → done (all R4 stories complete)
 # project: the_word_and_the_way
 # project_key: NOKEY
 # tracking_system: file-system
@@ -24,7 +24,7 @@
 # Retro:  optional <-> done
 
 generated: 2026-06-22
-last_updated: 2026-06-27  # 4-2-browse-encounters-by-season → done (code review passed); epic-4 in-progress (4-3, 4-4 remain)
+last_updated: 2026-06-29  # 4-4 → done (code review passed); epic-4 → done (all R4 stories complete)
 project: the_word_and_the_way
 project_key: NOKEY
 tracking_system: file-system
@@ -59,11 +59,11 @@ development_status:
   epic-3-retrospective: optional
 
   # ── R4: The Shelves / Archive (build step 4) ──
-  epic-4: in-progress
+  epic-4: done
   4-1-seasons-as-spines: done             # net-new — season_id as the organizing lens
   4-2-browse-encounters-by-season: done        # US-28 (reframed: season, not date)
-  4-3-personal-verse-library: backlog     # US-25, US-26
-  4-4-on-this-day-surfacing: backlog      # the only place raw date is used
+  4-3-personal-verse-library: done        # US-25, US-26
+  4-4-on-this-day-surfacing: done         # the only place raw date is used
   epic-4-retrospective: optional
 
   # ── R5: The Window / Witness (build step 5) ──

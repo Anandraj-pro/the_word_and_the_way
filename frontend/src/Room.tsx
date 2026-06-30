@@ -10,6 +10,7 @@ import {
 } from "./api";
 import { Altar } from "./components/Altar";
 import { Desk } from "./components/Desk";
+import { OnThisDay } from "./components/OnThisDay";
 import { SeasonRitual } from "./components/SeasonRitual";
 import { Shelves } from "./components/Shelves";
 import { Wall } from "./components/Wall";
@@ -38,6 +39,7 @@ export function Room() {
   const [activeStations, setActiveStations] = useState<ReadonlySet<string>>(new Set()); // which station ids are in view
   const [readingToday, setReadingToday] = useState<ReadingToday | null>(null); // dashboard progress
   const [prayerToday, setPrayerToday] = useState<PrayerToday | null>(null);
+  const [onThisDay, setOnThisDay] = useState<Encounter[]>([]); // words received on this date in years past
   const [tourOpen, setTourOpen] = useState(false); // the first walk through the room
 
   // First visit: take the walk once, then remember it was taken.
@@ -69,6 +71,8 @@ export function Room() {
     // Progress for the Altar dashboard — non-critical, so failures don't close the room.
     api.readingToday().then(setReadingToday).catch(() => setReadingToday(null));
     api.prayerToday().then(setPrayerToday).catch(() => setPrayerToday(null));
+    // A gentle remembrance of words received on this date in years past — also non-critical.
+    api.onThisDay().then(setOnThisDay).catch(() => setOnThisDay([]));
   }, []);
 
   useEffect(() => {
@@ -233,6 +237,13 @@ export function Room() {
           />
         </Reveal>
 
+        {/* On This Day — a gentle remembrance, surfaced only when this date holds words from years past. */}
+        {onThisDay.length > 0 && (
+          <Reveal className="mx-auto w-full">
+            <OnThisDay remembered={onThisDay} />
+          </Reveal>
+        )}
+
         {/* The two stations you work in: the Desk (primary) and the Wall (second). */}
         <div className="grid items-stretch gap-6 lg:grid-cols-[1.5fr_1fr]">
           <Reveal id="station-desk" className="h-full scroll-mt-24" delay={0}>
@@ -259,7 +270,14 @@ export function Room() {
             <p className="mb-2 text-center text-[0.65rem] uppercase tracking-[0.3em] text-stone/60">
               The seasons you have kept
             </p>
-            <Shelves seasons={seasons} encounters={encounters} />
+            <Shelves
+              seasons={seasons}
+              encounters={encounters}
+              onDeleteEncounter={async (id) => {
+                await api.deleteEncounter(id);
+                await load();
+              }}
+            />
           </Reveal>
         )}
 

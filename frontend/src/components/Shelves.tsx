@@ -2,20 +2,29 @@ import { useState } from "react";
 import type { Encounter, Season } from "../api";
 import { EncounterCard } from "./EncounterCard";
 import { Station } from "./Station";
+import { VerseLibrary } from "./VerseLibrary";
 
 interface ShelvesProps {
   seasons: Season[];
   /** Every Encounter the room holds; each spine opens to the ones it gathered. */
   encounters: Encounter[];
+  /** Remove a kept verse from the library (with the room then refreshing). */
+  onDeleteEncounter: (id: number) => void | Promise<void>;
   /** The crossing ritual now lives on the Altar; pass these only where a trigger is wanted. */
   hasOpenSeason?: boolean;
   onBeginRitual?: () => void;
 }
 
-/** The Shelves — the Archive. Seasons are the spines; the only calendar the room knows. */
-export function Shelves({ seasons, encounters, hasOpenSeason, onBeginRitual }: ShelvesProps) {
+/** The Shelves — the Archive. Two facets: seasons as spines, and the verses kept across them. */
+export function Shelves({ seasons, encounters, onDeleteEncounter, hasOpenSeason, onBeginRitual }: ShelvesProps) {
+  // Which facet of the Archive is showing — the seasons, or the kept-verse library.
+  const [view, setView] = useState<"seasons" | "verses">("seasons");
   // One spine stands open at a time — the season the Pastor has stepped back into.
   const [openId, setOpenId] = useState<number | null>(null);
+
+  // The kept verses — Encounters whose scripture is verse-level (a chapter:verse reference,
+  // not a stray colon). Newest-first order is preserved from the API list.
+  const verses = encounters.filter((e) => /\d+:\d+/.test(e.scripture ?? ""));
 
   // The weight a spine carries — how many words the season held.
   const weight = (n: number) =>
@@ -24,10 +33,37 @@ export function Shelves({ seasons, encounters, hasOpenSeason, onBeginRitual }: S
   return (
     <Station
       label="The Shelves"
-      subtitle="Seasons"
+      subtitle="Archive"
       empty={seasons.length === 0}
       emptyWord="No seasons named yet."
     >
+      {/* Two facets of the Archive — the seasons, and the verses kept across them. */}
+      <div className="mb-2 flex gap-3 text-[0.65rem] uppercase tracking-[0.2em]">
+        <button
+          onClick={() => setView("seasons")}
+          className={`pb-0.5 transition-colors ${
+            view === "seasons"
+              ? "border-b border-terracotta text-terracotta"
+              : "text-stone/55 hover:text-ink"
+          }`}
+        >
+          Seasons
+        </button>
+        <button
+          onClick={() => setView("verses")}
+          className={`pb-0.5 transition-colors ${
+            view === "verses"
+              ? "border-b border-terracotta text-terracotta"
+              : "text-stone/55 hover:text-ink"
+          }`}
+        >
+          Kept verses
+        </button>
+      </div>
+
+      {view === "verses" ? (
+        <VerseLibrary verses={verses} onDelete={onDeleteEncounter} />
+      ) : (
       <div className="flex min-h-0 flex-col gap-2 overflow-y-auto">
         {seasons.map((s) => {
           const open = openId === s.id;
@@ -86,6 +122,7 @@ export function Shelves({ seasons, encounters, hasOpenSeason, onBeginRitual }: S
           );
         })}
       </div>
+      )}
 
       {onBeginRitual && (
         <button
