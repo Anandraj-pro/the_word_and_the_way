@@ -252,6 +252,10 @@ export function Room() {
               seed={seed}
               onReceive={receive}
               onCarry={carry}
+              onWitness={async (id, words) => {
+                await api.witnessEncounter(id, words);
+                await load();
+              }}
               onReadingComplete={load}
             />
           </Reveal>

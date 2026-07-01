@@ -10,6 +10,7 @@ interface DeskProps {
   seed?: string; // prefilled from the Altar threshold line
   onReceive: (scripture: string, words: string, scriptureText?: string) => void;
   onCarry: (id: number) => void;
+  onWitness: (id: number, words: string) => void | Promise<void>; // God kept it → the Window
   onReadingComplete: () => void; // a reading may have become an Encounter
 }
 
@@ -24,7 +25,7 @@ type LookupState =
   | { status: "unavailable" };
 
 /** The Desk — Receive + Reflect. Where a rhema word is captured and carried toward the Altar. */
-export function Desk({ active, seed, onReceive, onCarry, onReadingComplete }: DeskProps) {
+export function Desk({ active, seed, onReceive, onCarry, onWitness, onReadingComplete }: DeskProps) {
   const [scripture, setScripture] = useState("");
   const [words, setWords] = useState(seed ?? "");
   const [lookup, setLookup] = useState<LookupState>({ status: "idle" });
@@ -128,7 +129,9 @@ export function Desk({ active, seed, onReceive, onCarry, onReadingComplete }: De
         {active.length === 0 ? (
           <p className="text-sm italic text-stone">The page is blank. The silence is the invitation.</p>
         ) : (
-          active.map((e) => <EncounterCard key={e.id} e={e} onCarry={onCarry} />)
+          active.map((e) => (
+            <EncounterCard key={e.id} e={e} onCarry={onCarry} onWitness={onWitness} />
+          ))
         )}
       </div>
     </Station>

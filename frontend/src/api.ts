@@ -184,6 +184,11 @@ export const api = {
     http<Encounter>("/encounters", { method: "POST", body: JSON.stringify(body) }),
   carry: (id: number) =>
     http<Encounter>(`/encounters/${id}/carry`, { method: "POST" }),
+  witnessEncounter: (id: number, words: string) =>
+    http<Encounter>(`/encounters/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ stage: "witnessed", words }),
+    }),
   deleteEncounter: (id: number) =>
     http<void>(`/encounters/${id}`, { method: "DELETE" }),
   keepVerse: (scripture: string, scriptureText?: string, words?: string) =>
