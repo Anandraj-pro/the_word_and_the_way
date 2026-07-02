@@ -16,13 +16,16 @@ being built rather than the superseded dashboard framing.
 The build is already following `room-architecture.md §4`. These 7 epics map 1:1 to that build
 plan, so sprint status can track reality.
 
+Status column reconciled against `_bmad-output/implementation-artifacts/sprint-status.yaml`
+(the authoritative tracker) as of **2026-07-02**.
+
 | New epic | Station / Stage | Build step | Status |
 |---|---|---|---|
 | **R1 — Room Shell + Encounter Model** | whole room · spine | 1 | done |
-| **R2 — The Desk → Altar Loop** | Desk (Receive+Reflect) → Altar (Carry) | 2 | done |
-| **R3 — The Wall** | Declare · War Room · confessions corpus | 3 | in-progress |
-| **R4 — The Shelves** | Archive · seasons as spines | 4 | backlog |
-| **R5 — The Window** | Witness · testimonies | 5 | backlog |
+| **R2 — The Desk → Altar Loop** | Desk (Receive+Reflect) → Altar (Carry) | 2 | done (2-6…2-8 reading facets deferred) |
+| **R3 — The Wall** | Declare · War Room · confessions corpus | 3 | done |
+| **R4 — The Shelves** | Archive · seasons as spines | 4 | done (retro complete) |
+| **R5 — The Window** | Witness · testimonies | 5 | in-progress (5-1 done; 5-2, 5-3 remain) |
 | **R6 — Lighting** | Three-Watch + Seasonal Skin + Altar greeting | 6 | backlog |
 | **R7 — Settings & Ollama** | cross-cutting plumbing | — | backlog |
 
