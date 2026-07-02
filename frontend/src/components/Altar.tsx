@@ -71,7 +71,7 @@ export function Altar({
       </p>
 
       {/* The dashboard — progress at a glance. */}
-      <div className="relative mx-auto mt-9 flex max-w-2xl flex-wrap items-start justify-center gap-x-10 gap-y-4">
+      <div className="relative mx-auto mt-9 flex max-w-4xl flex-wrap items-start justify-center gap-x-10 gap-y-4">
         <Stat value={cornerstones.length} label="inscribed" />
         <Stat value={wordsInFlight} label="carrying" />
         {reading && <Stat value={`✦ ${reading.streak}`} label="in the word" />}
@@ -101,7 +101,7 @@ export function Altar({
       </div>
 
       {/* The cornerstones — the heart of the room. */}
-      <div className="relative mx-auto mt-12 flex max-w-3xl flex-col items-center gap-8">
+      <div className="relative mx-auto mt-12 flex max-w-4xl flex-col items-center gap-8">
         {cornerstones.length === 0 ? (
           <p className="py-2 text-center font-serif text-base italic leading-relaxed text-stone">
             No stones are set yet. Carry a word through three seasons<br className="hidden sm:block" />

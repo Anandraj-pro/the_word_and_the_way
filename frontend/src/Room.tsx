@@ -36,7 +36,7 @@ export function Room() {
   const [inscribed, setInscribed] = useState<string>(); // flash when a word reaches the Altar
   const [ritualOpen, setRitualOpen] = useState(false);
   const [entered, setEntered] = useState(false); // false = standing at the threshold (full hero)
-  const [activeStations, setActiveStations] = useState<ReadonlySet<string>>(new Set()); // which station ids are in view
+  const [activeStation, setActiveStation] = useState("station-altar"); // the one station in view once entered
   const [readingToday, setReadingToday] = useState<ReadingToday | null>(null); // dashboard progress
   const [prayerToday, setPrayerToday] = useState<PrayerToday | null>(null);
   const [onThisDay, setOnThisDay] = useState<Encounter[]>([]); // words received on this date in years past
@@ -79,38 +79,6 @@ export function Room() {
     load();
   }, [load]);
 
-  // Track which station the Pastor is standing in, to light it on the threshold bar.
-  // The Shelves·Desk·Wall band shares a row, so several can be "here" at once.
-  useEffect(() => {
-    if (!entered) return;
-    const ids = [
-      "station-altar",
-      "station-shelves",
-      "station-desk",
-      "station-wall",
-      "station-window",
-    ];
-    const observer = new IntersectionObserver(
-      (entries) => {
-        setActiveStations((prev) => {
-          const next = new Set(prev);
-          for (const entry of entries) {
-            if (entry.isIntersecting) next.add(entry.target.id);
-            else next.delete(entry.target.id);
-          }
-          return next;
-        });
-      },
-      // Active zone: just below the sticky bar, down to the upper-middle of the view.
-      { rootMargin: "-56px 0px -45% 0px", threshold: 0.01 },
-    );
-    ids.forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    });
-    return () => observer.disconnect();
-  }, [entered]);
-
   const openSeason = seasons.find((s) => s.is_open);
   const openSeasonId = openSeason?.id ?? null;
 
@@ -119,21 +87,17 @@ export function Room() {
     setTimeout(() => setInscribed(undefined), 5000);
   };
 
-  // Crossing the room from the entry hero to a station.
+  // Turn to a station — it becomes the only one in view; the rest wait in the bar.
   const goToStation = (anchor: string) => {
-    document.getElementById(anchor)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
-  // Step through the threshold: the hero collapses to the slim bar, then we walk to the station.
-  const enterRoom = (anchor: string) => {
-    setEntered(true);
-    setTimeout(() => goToStation(anchor), 80); // let the slim bar mount before scrolling
-  };
-
-  // Step back out: re-open the full entrance and return to the top.
-  const reopenThreshold = () => {
-    setEntered(false);
+    setActiveStation(anchor);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Step through the threshold: the hero collapses to the slim bar, facing the chosen station.
+  const enterRoom = (anchor: string) => {
+    setActiveStation(anchor);
+    setEntered(true);
+    window.scrollTo({ top: 0 });
   };
 
   // The same Encounter list, sorted to its station. The Desk holds the open season's
@@ -208,8 +172,9 @@ export function Room() {
       {entered && (
         <RoomThreshold
           onGo={goToStation}
-          onReopen={reopenThreshold}
-          active={activeStations}
+          onHome={() => goToStation("station-altar")}
+          onTour={() => setTourOpen(true)}
+          active={new Set([activeStation])}
         />
       )}
 
@@ -223,73 +188,95 @@ export function Room() {
         {/* The threshold — the full entrance hero, shown until you step into the room. */}
         {!entered && <RoomAccordion onEnter={enterRoom} onTour={() => setTourOpen(true)} />}
 
-        {/* Home — the Altar you face: progress, cornerstones, and the season's crossing. */}
-        <Reveal id="station-altar" className="scroll-mt-24">
-          <Altar
-            cornerstones={cornerstones}
-            onThreshold={setSeed}
-            wordsInFlight={wordsInFlight}
-            season={openSeason}
-            hasOpenSeason={openSeasonId !== null}
-            onBeginRitual={() => setRitualOpen(true)}
-            reading={readingToday ?? undefined}
-            watch={prayerToday ?? undefined}
-          />
-        </Reveal>
+        {/* Once entered, you face one station at a time — the rest wait in the bar. */}
+        {entered && (
+          <>
+            {/* Home — the Altar: progress, cornerstones, and the season's crossing. */}
+            {activeStation === "station-altar" && (
+              <>
+                <Reveal className="scroll-mt-24">
+                  <Altar
+                    cornerstones={cornerstones}
+                    onThreshold={setSeed}
+                    wordsInFlight={wordsInFlight}
+                    season={openSeason}
+                    hasOpenSeason={openSeasonId !== null}
+                    onBeginRitual={() => setRitualOpen(true)}
+                    reading={readingToday ?? undefined}
+                    watch={prayerToday ?? undefined}
+                  />
+                </Reveal>
+                {/* On This Day — surfaced on the Altar only when this date holds words from years past. */}
+                {onThisDay.length > 0 && (
+                  <Reveal className="mx-auto w-full">
+                    <OnThisDay remembered={onThisDay} />
+                  </Reveal>
+                )}
+              </>
+            )}
 
-        {/* On This Day — a gentle remembrance, surfaced only when this date holds words from years past. */}
-        {onThisDay.length > 0 && (
-          <Reveal className="mx-auto w-full">
-            <OnThisDay remembered={onThisDay} />
-          </Reveal>
-        )}
+            {/* The Desk — Receive & Reflect. */}
+            {activeStation === "station-desk" && (
+              <Reveal className="mx-auto w-full max-w-5xl scroll-mt-24">
+                <Desk
+                  active={deskActive}
+                  seed={seed}
+                  onReceive={receive}
+                  onCarry={carry}
+                  onWitness={async (id, words) => {
+                    await api.witnessEncounter(id, words);
+                    await load();
+                  }}
+                  onReadingComplete={load}
+                />
+              </Reveal>
+            )}
 
-        {/* The two stations you work in: the Desk (primary) and the Wall (second). */}
-        <div className="grid items-stretch gap-6 lg:grid-cols-[1.5fr_1fr]">
-          <Reveal id="station-desk" className="h-full scroll-mt-24" delay={0}>
-            <Desk
-              active={deskActive}
-              seed={seed}
-              onReceive={receive}
-              onCarry={carry}
-              onWitness={async (id, words) => {
-                await api.witnessEncounter(id, words);
-                await load();
-              }}
-              onReadingComplete={load}
-            />
-          </Reveal>
-          <Reveal id="station-wall" className="h-full scroll-mt-24" delay={120}>
-            <Wall
-              declarations={declarations}
-              confessions={confessions}
-              cornerstones={cornerstones}
-            />
-          </Reveal>
-        </div>
+            {/* The Wall — Declare. */}
+            {activeStation === "station-wall" && (
+              <Reveal className="mx-auto w-full max-w-5xl scroll-mt-24">
+                <Wall
+                  declarations={declarations}
+                  confessions={confessions}
+                  cornerstones={cornerstones}
+                  onKeep={async (words, scripture, scriptureText) => {
+                    await api.createEncounter({
+                      words,
+                      scripture,
+                      scripture_text: scriptureText,
+                      stage: "declared",
+                      season_id: openSeasonId,
+                    });
+                    await load();
+                  }}
+                />
+              </Reveal>
+            )}
 
-        {/* The Shelves stand as the Archive — open a season's spine to read what it held. */}
-        {seasons.length > 0 && (
-          <Reveal id="station-shelves" className="mx-auto w-full max-w-3xl scroll-mt-24">
-            <p className="mb-2 text-center text-[0.65rem] uppercase tracking-[0.3em] text-stone/60">
-              The seasons you have kept
-            </p>
-            <Shelves
-              seasons={seasons}
-              encounters={encounters}
-              onDeleteEncounter={async (id) => {
-                await api.deleteEncounter(id);
-                await load();
-              }}
-            />
-          </Reveal>
-        )}
+            {/* The Shelves — the Archive of seasons kept. */}
+            {activeStation === "station-shelves" && (
+              <Reveal className="mx-auto w-full max-w-5xl scroll-mt-24">
+                <p className="mb-2 text-center text-[0.65rem] uppercase tracking-[0.3em] text-stone/60">
+                  The seasons you have kept
+                </p>
+                <Shelves
+                  seasons={seasons}
+                  encounters={encounters}
+                  onDeleteEncounter={async (id) => {
+                    await api.deleteEncounter(id);
+                    await load();
+                  }}
+                />
+              </Reveal>
+            )}
 
-        {/* The Window opens only when there is testimony to encourage by. */}
-        {testimonies.length > 0 && (
-          <Reveal id="station-window" className="mx-auto w-full max-w-3xl scroll-mt-24">
-            <Window testimonies={testimonies} />
-          </Reveal>
+            {/* The Window — Witness. */}
+            {activeStation === "station-window" && (
+              <Reveal className="mx-auto w-full max-w-5xl scroll-mt-24">
+                <Window testimonies={testimonies} />
+              </Reveal>
+            )}
+          </>
         )}
 
         <p className="pt-2 text-center text-xs uppercase tracking-[0.3em] text-stone/60">

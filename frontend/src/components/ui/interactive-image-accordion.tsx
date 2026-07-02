@@ -309,8 +309,10 @@ interface RoomThresholdProps {
   items?: StationPanel[];
   /** Jump to a station's section. */
   onGo: (anchor: string) => void;
-  /** Re-open the full entrance hero. */
-  onReopen: () => void;
+  /** Return to the Altar — the room's home. */
+  onHome: () => void;
+  /** Open the guided walk through the room. */
+  onTour?: () => void;
   /** Anchors currently in view — these stay lit; the rest recede. */
   active?: ReadonlySet<string>;
 }
@@ -319,7 +321,7 @@ interface RoomThresholdProps {
 // Carries the room's name (click to re-open the threshold) and quick-nav to each
 // station. Only the station you're standing in shows; the others collapse out of
 // the bar entirely, sliding back open when you hover it (or tab to one).
-export function RoomThreshold({ items = STATIONS, onGo, onReopen, active }: RoomThresholdProps) {
+export function RoomThreshold({ items = STATIONS, onGo, onHome, onTour, active }: RoomThresholdProps) {
   // When nothing is in view yet, show every link so the bar is never empty.
   const showAll = !items.some((it) => active?.has(it.anchor));
   return (
@@ -327,8 +329,8 @@ export function RoomThreshold({ items = STATIONS, onGo, onReopen, active }: Room
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-2.5">
         <button
           type="button"
-          onClick={onReopen}
-          aria-label="Re-open the entrance"
+          onClick={onHome}
+          aria-label="Return to the Altar"
           className="group flex items-center gap-2"
         >
           <span className="text-terracotta">✦</span>
@@ -336,9 +338,10 @@ export function RoomThreshold({ items = STATIONS, onGo, onReopen, active }: Room
             The Word and the Way
           </span>
           <span className="text-[0.65rem] uppercase tracking-[0.2em] text-stone opacity-0 transition-opacity group-hover:opacity-100">
-            ↑ entrance
+            ↑ the Altar
           </span>
         </button>
+        <div className="flex items-center gap-3">
         <nav className="group/nav hidden items-center sm:flex">
           {items.map((it) => {
             const isActive = active?.has(it.anchor) ?? false;
@@ -374,6 +377,16 @@ export function RoomThreshold({ items = STATIONS, onGo, onReopen, active }: Room
             );
           })}
         </nav>
+        {onTour && (
+          <button
+            type="button"
+            onClick={onTour}
+            className="whitespace-nowrap rounded-sm border border-stone/30 px-2.5 py-1 font-serif text-xs text-stone transition-colors hover:border-terracotta hover:text-terracotta focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta"
+          >
+            ✦ Take a walk
+          </button>
+        )}
+        </div>
       </div>
     </header>
   );
