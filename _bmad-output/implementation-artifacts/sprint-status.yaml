@@ -1,5 +1,5 @@
 # generated: 2026-06-22
-# last_updated: 2026-07-01  # 5-1-personal-testimonies → done (code review passed); epic-5 in-progress (5-2, 5-3 remain)
+# last_updated: 2026-07-02  # sprint-planning refresh — no status changes; every story file on disk already `done`, epic-5 still in-progress (5-2, 5-3 remain)
 # project: the_word_and_the_way
 # project_key: NOKEY
 # tracking_system: file-system
@@ -12,9 +12,10 @@
 # PRD story (US-01..US-31) into these stations/stages, the net-new carry/season/testimony
 # work the PRD never specified, and the open tensions.
 #
-# STATUS CAVEAT: No BMAD story files exist yet (the room was built freehand per the north-star
-# doc). Story-level status below is INFERRED from build progress, not file-detected. Treat
-# `done` as "shipped in the freehand build, story file not yet back-filled" and correct as
+# STATUS CAVEAT: Story files now exist for the later work (3-3, 3-4, 4-1..4-4, 5-1) — those
+# statuses are file-corroborated. The earlier stations (R1, R2, most of R3) were built freehand
+# per the north-star doc and have NO back-filled story file; their `done` is INFERRED from build
+# progress. Treat un-filed `done` as "shipped, story file not yet back-filled" and correct as
 # stories are formalized.
 
 # STATUS DEFINITIONS:
@@ -24,7 +25,7 @@
 # Retro:  optional <-> done
 
 generated: 2026-06-22
-last_updated: 2026-07-01  # 5-1-personal-testimonies → done (code review passed); epic-5 in-progress (5-2, 5-3 remain)
+last_updated: 2026-07-02  # sprint-planning refresh — no status changes; every story file on disk already `done`, epic-5 still in-progress (5-2, 5-3 remain)
 project: the_word_and_the_way
 project_key: NOKEY
 tracking_system: file-system
