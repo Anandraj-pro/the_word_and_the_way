@@ -17,6 +17,9 @@ frontend/dist/
 # Raw source files (binary originals — large, not code)
 docs/confessions_raw/
 
+# BMAD planning workspace (generated artifacts, not source)
+_bmad-output/
+
 # IDE & tooling runtime
 .idea/
 .playwright-mcp/
