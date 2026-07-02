@@ -1,12 +1,33 @@
 import { useMemo, useRef, useState } from "react";
-import { api, type Confession, type ConfessionSummary, type Encounter } from "../api";
+import {
+  api,
+  type ComposeResult,
+  type Confession,
+  type ConfessionSummary,
+  type Encounter,
+} from "../api";
+import { Modal } from "./ui/Modal";
 import { Station } from "./Station";
 import { WarRoom, type WarRoomItem } from "./WarRoom";
+
+// The scribe writes in light markdown (*scripture refs*, **emphasis**). Read it plainly.
+const cleanProse = (s: string) =>
+  s
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/\*(.+?)\*/g, "$1")
+    .replace(/^#{1,6}\s*/gm, "")
+    .trim();
 
 interface WallProps {
   declarations: Encounter[];
   confessions: ConfessionSummary[];
   cornerstones: Encounter[];
+  // Keep a freshly composed confession as a declared Encounter on the spine.
+  onKeep: (
+    words: string,
+    scripture: string | null,
+    scriptureText: string | null,
+  ) => Promise<void>;
 }
 
 /**
@@ -14,10 +35,18 @@ interface WallProps {
  * search by meaning (RAG semantic search via ChromaDB + Ollama). Gather several
  * words and enter the War Room to proclaim them aloud, one at a time.
  */
-export function Wall({ declarations, confessions, cornerstones }: WallProps) {
+export function Wall({ declarations, confessions, cornerstones, onKeep }: WallProps) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState<Confession | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // The scribe — compose a new declaration from a real-time need (RAG generation).
+  const [composeOpen, setComposeOpen] = useState(false);
+  const [composing, setComposing] = useState(false);
+  const [composed, setComposed] = useState<ComposeResult | null>(null);
+  const [composeFailed, setComposeFailed] = useState(false); // the model was unreachable
+  const [keeping, setKeeping] = useState(false);
+  const [kept, setKept] = useState(false);
 
   // The War Room muster — words marked to proclaim, in the order chosen.
   const [muster, setMuster] = useState<WarRoomItem[]>([]);
@@ -97,6 +126,46 @@ export function Wall({ declarations, confessions, cornerstones }: WallProps) {
     }
   };
 
+  // Ask the scribe for a word: retrieve the nearest confessions, ground them in
+  // Scripture, and let the local model write a declaration for this exact need.
+  const composeWord = async () => {
+    const q = query.trim();
+    if (!q) return;
+    setComposeOpen(true);
+    setComposing(true);
+    setComposed(null);
+    setComposeFailed(false);
+    setKept(false);
+    try {
+      setComposed(await api.composeConfession(q, 3));
+    } catch {
+      setComposeFailed(true);
+    } finally {
+      setComposing(false);
+    }
+  };
+
+  const closeCompose = () => {
+    setComposeOpen(false);
+    setComposed(null);
+    setComposeFailed(false);
+    setKept(false);
+  };
+
+  // Keep it: the word leaves the scribe and joins the spine as a declaration.
+  const keepComposed = async () => {
+    if (!composed) return;
+    setKeeping(true);
+    try {
+      const primary = composed.scriptures[0];
+      await onKeep(composed.confession, primary?.reference ?? null, primary?.text ?? null);
+      setKept(true);
+      setTimeout(closeCompose, 1300);
+    } finally {
+      setKeeping(false);
+    }
+  };
+
   const isEmpty = declarations.length === 0 && confessions.length === 0;
 
   return (
@@ -134,7 +203,7 @@ export function Wall({ declarations, confessions, cornerstones }: WallProps) {
               className="relative rounded-sm bg-terracotta px-4 py-3 text-linen shadow-sm"
             >
               <p className="pr-6 font-display text-base leading-snug">
-                {d.words || d.scripture_text}
+                {cleanProse(d.words || d.scripture_text || "")}
               </p>
               {d.scripture && (
                 <p className="mt-1 text-xs uppercase tracking-[0.2em] text-linen/75">
@@ -146,7 +215,7 @@ export function Wall({ declarations, confessions, cornerstones }: WallProps) {
                   toggleMuster({
                     kind: "declaration",
                     id: d.id,
-                    title: d.words || d.scripture_text || d.scripture || "",
+                    title: cleanProse(d.words || d.scripture_text || d.scripture || ""),
                     scripture: d.scripture,
                   })
                 }
@@ -221,6 +290,16 @@ export function Wall({ declarations, confessions, cornerstones }: WallProps) {
               </p>
             ) : null}
 
+            {/* The scribe — turn this need into a new, Scripture-grounded declaration. */}
+            {query.trim() && !searching && (
+              <button
+                onClick={composeWord}
+                className="mb-2 flex items-center gap-1.5 font-serif text-xs italic text-terracotta underline decoration-terracotta/40 underline-offset-2 transition-colors hover:text-terracotta-deep"
+              >
+                ✦ Compose a word for this need
+              </button>
+            )}
+
             {searching && (
               <p className="animate-pulse py-2 text-sm italic text-stone/70">
                 Searching the Wall…
@@ -280,8 +359,10 @@ export function Wall({ declarations, confessions, cornerstones }: WallProps) {
                   );
                 })}
                 {displayList.length === 0 && (
-                  <li className="px-2 py-2 text-sm italic text-stone">
-                    {isSemanticMode ? "Nothing matched on the Wall." : "No declaration by that name."}
+                  <li className="px-2 py-2 text-sm italic text-stone/70">
+                    {isSemanticMode
+                      ? "Nothing matched on the Wall — compose a word above."
+                      : "No declaration by that title — press Enter to search by meaning, or compose a word above."}
                   </li>
                 )}
               </ul>
@@ -292,14 +373,8 @@ export function Wall({ declarations, confessions, cornerstones }: WallProps) {
 
       {/* The scroll, unrolled — large text to read aloud and declare. */}
       {(open || loading) && (
-        <div
-          className="fixed inset-0 z-50 flex justify-center overflow-y-auto bg-ink/80 px-4 py-10 backdrop-blur-sm"
-          onClick={() => setOpen(null)}
-        >
-          <div
-            className="settle h-fit w-full max-w-2xl rounded-sm border border-terracotta/30 bg-linen px-7 py-8 shadow-2xl shadow-black/40"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <Modal onClose={() => setOpen(null)}>
+          <div className="px-7 py-8">
             {loading || !open ? (
               <p className="font-serif text-sm italic text-stone">Unrolling…</p>
             ) : (
@@ -356,7 +431,138 @@ export function Wall({ declarations, confessions, cornerstones }: WallProps) {
               </>
             )}
           </div>
-        </div>
+        </Modal>
+      )}
+
+      {/* The scribe's word — a freshly composed declaration, to be prayed and kept. */}
+      {composeOpen && (
+        <Modal onClose={closeCompose}>
+          {/* Header — sticks to the top of the card so the close is always reachable. */}
+          <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-stone/15 bg-linen/95 px-7 py-5 backdrop-blur-sm">
+            <div>
+              <p className="flex items-center gap-1.5 font-display text-xs uppercase tracking-[0.25em] text-terracotta-deep">
+                ✦ A word for you
+              </p>
+              {composed && (
+                <p className="mt-1 font-serif text-sm italic text-stone">
+                  for “{composed.problem}”
+                </p>
+              )}
+            </div>
+            <button
+              onClick={closeCompose}
+              aria-label="Close"
+              className="shrink-0 rounded-full px-2 text-xl leading-none text-stone transition-colors hover:text-terracotta-deep"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="px-7 py-6">
+            {composing && (
+              <div className="flex flex-col items-center gap-3 py-10 text-center">
+                <span className="flex gap-1.5">
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-terracotta [animation-delay:-0.3s]" />
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-terracotta [animation-delay:-0.15s]" />
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-terracotta" />
+                </span>
+                <p className="font-serif text-sm italic text-stone/70">
+                  The scribe is writing… this can take a moment.
+                </p>
+              </div>
+            )}
+
+            {composeFailed && (
+              <p className="py-10 text-center font-serif text-sm italic text-terracotta-deep">
+                The scribe is resting — the local model could not be reached. Is Ollama
+                running?
+              </p>
+            )}
+
+            {composed && !composing && (
+              <>
+                {/* The declaration — the hero, set to be read aloud. */}
+                <div className="flex flex-col gap-4">
+                  {cleanProse(composed.confession)
+                    .split(/\n{2,}/)
+                    .filter((p) => p.trim())
+                    .map((para, i) => (
+                      <p
+                        key={i}
+                        className="whitespace-pre-line font-serif text-[1.15rem] leading-relaxed text-ink"
+                      >
+                        {para}
+                      </p>
+                    ))}
+                </div>
+
+                {composed.scriptures.length > 0 && (
+                  <div className="mt-7 border-t border-stone/20 pt-5">
+                    <p className="mb-3 text-xs uppercase tracking-[0.25em] text-stone/70">
+                      The Word it stands on
+                    </p>
+                    <ul className="flex flex-col gap-3">
+                      {composed.scriptures.map((s) => (
+                        <li key={s.reference} className="border-l-2 border-terracotta/30 pl-3">
+                          <p className="font-display text-xs uppercase tracking-[0.15em] text-terracotta-deep">
+                            {s.reference}
+                          </p>
+                          <p className="mt-0.5 font-serif text-sm italic leading-relaxed text-stone">
+                            {s.text}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {composed.prayer && (
+                  <div className="mt-7 rounded-md border border-terracotta/20 bg-terracotta/[0.07] px-5 py-4">
+                    <p className="mb-1.5 text-xs uppercase tracking-[0.25em] text-stone/70">
+                      A prayer
+                    </p>
+                    <p className="whitespace-pre-line font-serif text-[1.05rem] leading-relaxed text-ink">
+                      {cleanProse(composed.prayer)}
+                    </p>
+                  </div>
+                )}
+
+                {composed.sources.length > 0 && (
+                  <p className="mt-5 font-serif text-xs italic text-stone/55">
+                    Drawn from the Wall: {composed.sources.map((s) => s.title).join(" · ")}
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Actions — pinned to the bottom of the card, always in reach. */}
+          {composed && !composing && (
+            <div className="sticky bottom-0 flex items-center justify-end gap-4 border-t border-stone/15 bg-linen/95 px-7 py-4 backdrop-blur-sm">
+              {kept ? (
+                <p className="font-serif text-sm italic text-terracotta-deep">
+                  Kept — it is on the Wall. ✓
+                </p>
+              ) : (
+                <>
+                  <button
+                    onClick={closeCompose}
+                    className="font-serif text-sm text-stone/70 transition-colors hover:text-terracotta-deep"
+                  >
+                    Let it go
+                  </button>
+                  <button
+                    onClick={keepComposed}
+                    disabled={keeping}
+                    className="rounded-sm bg-terracotta px-5 py-2 font-display text-sm uppercase tracking-[0.15em] text-linen shadow-sm transition-colors hover:bg-terracotta-deep disabled:opacity-60"
+                  >
+                    {keeping ? "Keeping…" : "Keep this"}
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+        </Modal>
       )}
 
       {/* The War Room — the muster, proclaimed full-screen, ending on the cornerstone. */}

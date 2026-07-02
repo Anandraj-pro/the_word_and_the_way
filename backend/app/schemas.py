@@ -101,6 +101,29 @@ class ConfessionRead(ConfessionSummary):
     body: str
 
 
+# ---- Composed confession (RAG generation from a real-time need) ----
+class ComposeRequest(BaseModel):
+    """A struggle spoken plainly, to be turned into a grounded confession."""
+
+    problem: str
+    n: int = 3  # how many Wall confessions to draw from
+
+
+class ComposedScripture(BaseModel):
+    reference: str
+    text: str
+
+
+class ComposeResult(BaseModel):
+    """A newly written declaration — shown to be prayed, kept only if it lands."""
+
+    problem: str
+    confession: str
+    prayer: str
+    scriptures: list[ComposedScripture] = []  # the Word it stands on, text and all
+    sources: list[ConfessionSummary] = []  # the inherited confessions it drew from
+
+
 # ---- Scripture lookup (the Desk) ----
 class ScriptureRead(BaseModel):
     reference: str  # the canonical reference, e.g. "Psalms 27:14"

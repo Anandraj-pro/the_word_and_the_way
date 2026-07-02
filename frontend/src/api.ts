@@ -37,6 +37,21 @@ export interface Confession extends ConfessionSummary {
   body: string;
 }
 
+/** A verse the composed confession stands on — reference and its real text. */
+export interface ComposedScripture {
+  reference: string;
+  text: string;
+}
+
+/** A newly written declaration from a real-time need — shown to be prayed, kept if it lands. */
+export interface ComposeResult {
+  problem: string;
+  confession: string;
+  prayer: string;
+  scriptures: ComposedScripture[];
+  sources: ConfessionSummary[]; // the inherited confessions it drew from
+}
+
 export interface Season {
   id: number;
   name: string;
@@ -214,6 +229,11 @@ export const api = {
     http<ConfessionSummary[]>("/confessions/search", {
       method: "POST",
       body: JSON.stringify({ q, n }),
+    }),
+  composeConfession: (problem: string, n = 3) =>
+    http<ComposeResult>("/confessions/compose", {
+      method: "POST",
+      body: JSON.stringify({ problem, n }),
     }),
   scripture: (reference: string) =>
     http<Scripture>(`/scripture?reference=${encodeURIComponent(reference)}`),
