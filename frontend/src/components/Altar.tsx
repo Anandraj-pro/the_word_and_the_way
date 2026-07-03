@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import type { Encounter, Season } from "../api";
+import { WitnessForm } from "./WitnessForm";
 
 interface AltarProps {
   cornerstones: Encounter[];
@@ -11,6 +12,8 @@ interface AltarProps {
   onBeginRitual: () => void;
   reading?: { streak: number };
   watch?: { streak: number };
+  /** When provided, a carried promise can be witnessed — "God kept it." */
+  onWitness?: (id: number, words: string) => void | Promise<void>;
 }
 
 /** One figure on the dashboard — a number and what it counts. */
@@ -37,6 +40,7 @@ export function Altar({
   onBeginRitual,
   reading,
   watch,
+  onWitness,
 }: AltarProps) {
   const [bringing, setBringing] = useState("");
 
@@ -120,6 +124,22 @@ export function Altar({
               <p className="mt-2.5 text-[0.65rem] uppercase tracking-[0.3em] text-terracotta">
                 {c.scripture} · carried {c.carry_count}×
               </p>
+              {/* A carried promise God kept stays inscribed here, and rests in the Window. */}
+              {c.stage === "witnessed" ? (
+                <p className="mt-2 text-[0.6rem] uppercase tracking-[0.35em] text-terracotta/90">
+                  ✦ Kept — witnessed in the Window
+                </p>
+              ) : (
+                onWitness && (
+                  <div className="mt-2.5 mx-auto max-w-sm text-left">
+                    <WitnessForm
+                      tone="onInk"
+                      initial={c.words ?? ""}
+                      onWitness={(words) => onWitness(c.id, words)}
+                    />
+                  </div>
+                )
+              )}
             </div>
           ))
         )}

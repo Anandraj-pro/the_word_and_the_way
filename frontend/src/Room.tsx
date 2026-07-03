@@ -150,6 +150,13 @@ export function Room() {
     load();
   };
 
+  // Witness — "God kept it." A Desk word moves to the Window; a carried promise on
+  // the Altar stays inscribed and also rests in the Window. Reuses PATCH via the wrapper.
+  const witness = async (id: number, words: string) => {
+    await api.witnessEncounter(id, words);
+    await load();
+  };
+
   const completeRitual = (result?: CrossResult) => {
     setRitualOpen(false);
     // A word the crossing pushed past the threshold is inscribed on the Altar.
@@ -204,6 +211,7 @@ export function Room() {
                     onBeginRitual={() => setRitualOpen(true)}
                     reading={readingToday ?? undefined}
                     watch={prayerToday ?? undefined}
+                    onWitness={witness}
                   />
                 </Reveal>
                 {/* On This Day — surfaced on the Altar only when this date holds words from years past. */}
@@ -223,10 +231,7 @@ export function Room() {
                   seed={seed}
                   onReceive={receive}
                   onCarry={carry}
-                  onWitness={async (id, words) => {
-                    await api.witnessEncounter(id, words);
-                    await load();
-                  }}
+                  onWitness={witness}
                   onReadingComplete={load}
                 />
               </Reveal>
