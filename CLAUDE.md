@@ -39,7 +39,8 @@ setup details.
 - **Aesthetic.** "Ember & Stone" — terracotta / stone / linen / ink, with Abril Fatface
   (display) + Source Serif 4 (body). Tokens live in `frontend/src/index.css`.
 - **Don't commit artifacts.** `node_modules/`, `frontend/dist/`, `*.tsbuildinfo`,
-  `_bmad-output/`, and the SQLite DB / `chroma_db/` are build/runtime artifacts. Note:
-  `frontend/node_modules` is currently (mis)tracked and `frontend/` has no `.gitignore`
-  — stage paths explicitly; never `git add -A`.
+  `_bmad-output/`, and the SQLite DB / `chroma_db/` are build/runtime artifacts — all
+  covered by the root `.gitignore` (its `node_modules/` rule matches at any depth, so
+  `frontend/node_modules` is ignored, not tracked). Still, stage paths explicitly and
+  never `git add -A`, to keep stray runtime files out.
 - **Branch.** Solo project; work has historically landed directly on `master`.
