@@ -21,6 +21,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    UniqueConstraint,
     func,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -202,6 +203,67 @@ class PrayerLog(Base):
     focus_id: Mapped[int] = mapped_column(ForeignKey("prayer_focuses.id"), index=True)
     prayed_on: Mapped[date] = mapped_column(Date, default=date.today, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+# The Vine has four branches — the parts of one plant the Pastor tends each morning.
+# Word (the leaves), Prayer (the roots), Confession (the soil), Freestyle (new growth).
+ABIDING_BRANCHES = ("word", "prayer", "confession", "freestyle")
+
+
+class AbidingDay(Base):
+    """One day the Pastor came to abide — the Vine's memory of a morning's tending.
+
+    A felt rhythm of daily practice, kept as its own meta-layer: it records *presence* over
+    the day's branches (which were chosen, which were tended, in what order, for how long) —
+    never touching the Encounter spine, the reading logs, or the prayer logs. One row per
+    calendar day; `day` is the Vine's own calendar key (as PrayerLog has `prayed_on`).
+    """
+
+    __tablename__ = "abiding_day"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    day: Mapped[date] = mapped_column(Date, unique=True, index=True, default=date.today)
+    # The morning compass — a comma-separated list of chosen branch keys. A compass, not a
+    # contract: the Pastor may tend branches beyond these, and the Vine welcomes it.
+    planned_branches: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.now(), onupdate=func.now()
+    )
+
+    branches: Mapped[list["AbidingBranch"]] = relationship(
+        back_populates="abiding_day", cascade="all, delete-orphan"
+    )
+
+    @property
+    def planned(self) -> list[str]:
+        return [b for b in self.planned_branches.split(",") if b]
+
+
+class AbidingBranch(Base):
+    """One branch tended within a day — presence kept with a part of the Vine.
+
+    `seconds` is the linger that sculpts the branch's growth; `order_index` is the arc — which
+    branch the Pastor reached for first, second, and so on. `tended` comes true on first touch.
+    """
+
+    __tablename__ = "abiding_branch"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    abiding_day_id: Mapped[int] = mapped_column(
+        ForeignKey("abiding_day.id"), index=True
+    )
+    branch: Mapped[str] = mapped_column(String(20))  # one of ABIDING_BRANCHES
+    seconds: Mapped[int] = mapped_column(Integer, default=0)  # linger — sculpts growth
+    order_index: Mapped[int] = mapped_column(Integer, default=0)  # 1-based; the day's arc
+    first_touched_at: Mapped[datetime | None] = mapped_column(DateTime, default=None)
+    tended: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    abiding_day: Mapped["AbidingDay"] = relationship(back_populates="branches")
+
+    __table_args__ = (
+        UniqueConstraint("abiding_day_id", "branch", name="uq_abiding_branch"),
+    )
 
 
 class Encounter(Base):

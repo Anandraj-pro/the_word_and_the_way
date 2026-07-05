@@ -79,6 +79,16 @@ Not twelve nav items. Five places in one room. **You enter facing the Altar.**
 
 The corpus in `docs/confessions_md/` (50+ files) populates **The Wall** on day one.
 
+### The Vine — the Desk's daily rhythm (not a sixth station)
+
+At the Desk sits **the Vine**: one living plant the Pastor **abides** in each morning, tending
+its branches — Word, Prayer, Confession, Freestyle. It is a **hearth at the Desk, not a new
+station** — no nav item, no routed page. It gives the room its felt rhythm of daily practice:
+which parts were tended today, drawn as a plant coming to leaf, never a streak or a score. It
+is a **meta-layer** — it records *presence* over the day; it does not touch the Encounter spine.
+This is epic **R8**; the full design lives in
+[`consistance_key_feature.md`](consistance_key_feature.md).
+
 ---
 
 ## 3. The decisions that killed the old build (now resolved)

@@ -15,7 +15,7 @@ from .database import Base, SessionLocal, engine
 from .models import Confession
 from . import prayer as prayer_service
 from . import reading as reading_service
-from .routers import confessions, encounters, prayer, reading, scripture, seasons
+from .routers import abiding, confessions, encounters, prayer, reading, scripture, seasons
 from .seed import seed_if_empty
 
 
@@ -64,6 +64,7 @@ app.include_router(confessions.router)
 app.include_router(scripture.router)
 app.include_router(reading.router)
 app.include_router(prayer.router)
+app.include_router(abiding.router)
 
 
 @app.get("/api/health")

@@ -227,6 +227,35 @@ class PrayerFocusCreate(BaseModel):
     scripture: str | None = None
 
 
+# ---- The Vine / Abide (the Desk's daily rhythm) ----
+class AbidingBranchRead(BaseModel):
+    branch: str  # one of word | prayer | confession | freestyle
+    seconds: int  # linger — sculpts the branch's growth
+    order_index: int  # 1-based; the day's arc (what was reached for first)
+    tended: bool
+    first_touched_at: datetime | None = None
+
+
+class AbidingToday(BaseModel):
+    day: date
+    has_plan: bool
+    planned_branches: list[str]  # the morning compass
+    branches: list[AbidingBranchRead]
+
+
+class AbidingPlan(BaseModel):
+    """The morning ask — which branches to tend today. A compass, not a contract."""
+
+    branches: list[str] = []
+
+
+class AbidingTend(BaseModel):
+    """Keep presence with a branch — accrue its linger."""
+
+    branch: str
+    seconds: int = 0
+
+
 # ---- The crossing result ----
 class CrossResult(BaseModel):
     """What the crossing did: the new season, the words carried, and any newly inscribed."""

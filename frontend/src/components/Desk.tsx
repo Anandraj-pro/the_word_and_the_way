@@ -4,6 +4,7 @@ import { Station } from "./Station";
 import { EncounterCard } from "./EncounterCard";
 import { DailyReading } from "./DailyReading";
 import { DailyPrayer } from "./DailyPrayer";
+import { Vine } from "./Vine";
 
 interface DeskProps {
   active: Encounter[]; // open-season words still on their way to the Altar
@@ -66,6 +67,9 @@ export function Desk({ active, seed, onReceive, onCarry, onWitness, onReadingCom
 
   return (
     <Station label="The Desk" subtitle="Daily devotions">
+      {/* The Vine — the day's felt rhythm, framing the tending that follows. */}
+      <Vine />
+
       {/* Today — the daily rhythm, kept quiet so the Receive action leads. */}
       <div className="mb-5 divide-y divide-stone/15 rounded-sm border border-stone/15 bg-linen-deep/30 px-4">
         <DailyReading onComplete={onReadingComplete} />

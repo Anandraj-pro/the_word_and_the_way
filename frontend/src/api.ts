@@ -175,6 +175,23 @@ export interface ReadingHistory {
   entries: ReadingHistoryEntry[];
 }
 
+/** One branch of the Vine tended today — its leaf state, its linger, its place in the arc. */
+export interface AbidingBranch {
+  branch: "word" | "prayer" | "confession" | "freestyle";
+  seconds: number; // linger — sculpts the branch's growth
+  order_index: number; // 1-based; the day's arc (what was reached for first)
+  tended: boolean;
+  first_touched_at: string | null;
+}
+
+/** Today's Vine — the morning's plan and each branch's tending. */
+export interface AbidingToday {
+  day: string;
+  has_plan: boolean;
+  planned_branches: AbidingBranch["branch"][];
+  branches: AbidingBranch[];
+}
+
 async function http<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`/api${path}`, {
     headers: { "Content-Type": "application/json" },
@@ -259,4 +276,15 @@ export const api = {
     }),
   removePrayerFocus: (focusId: number) =>
     http<PrayerToday>(`/prayer/focus/${focusId}`, { method: "DELETE" }),
+  abidingToday: () => http<AbidingToday>("/abiding/today"),
+  setAbidingPlan: (branches: AbidingBranch["branch"][]) =>
+    http<AbidingToday>("/abiding/plan", {
+      method: "POST",
+      body: JSON.stringify({ branches }),
+    }),
+  tendBranch: (branch: AbidingBranch["branch"], seconds: number) =>
+    http<AbidingToday>("/abiding/tend", {
+      method: "POST",
+      body: JSON.stringify({ branch, seconds }),
+    }),
 };
