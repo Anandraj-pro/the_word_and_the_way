@@ -6,7 +6,8 @@ sculpts each branch into the day's shape. This service records that presence —
 in what order, for how long — as its own meta-layer. It does not touch the Encounter spine, the
 reading logs, or the prayer logs; it is a projection of tending, nothing more.
 """
-from datetime import date, datetime
+import math
+from datetime import date, datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -14,16 +15,20 @@ from sqlalchemy.orm import Session
 
 from .models import ABIDING_BRANCHES, AbidingBranch, AbidingDay
 
+# The Vine's long memory. Fullness is a recency-decay-weighted sense of how faithfully the
+# Pastor has tended lately — presence over the last month, older days fading. It is COMPUTED,
+# never a streak counted. `TAU` sets the fade (~12-day feel); `WINDOW` is how far back we look.
+_FULLNESS_TAU = 12.0
+_FULLNESS_WINDOW = 30
 
-def _serialize(day: AbidingDay | None) -> dict:
-    """Today's Vine as the API sees it — the plan and each branch's tending."""
-    if day is None:
-        return {"day": date.today(), "has_plan": False, "planned_branches": [], "branches": []}
-    branches = sorted(day.branches, key=lambda b: b.order_index)
+
+def _serialize(day: AbidingDay | None, fullness: float, days_dormant: int | None) -> dict:
+    """Today's Vine as the API sees it — the plan, each branch's tending, and the long state."""
+    branches = sorted(day.branches, key=lambda b: b.order_index) if day is not None else []
     return {
-        "day": day.day,
-        "has_plan": bool(day.planned),
-        "planned_branches": day.planned,
+        "day": day.day if day is not None else date.today(),
+        "has_plan": bool(day.planned) if day is not None else False,
+        "planned_branches": day.planned if day is not None else [],
         "branches": [
             {
                 "branch": b.branch,
@@ -34,11 +39,58 @@ def _serialize(day: AbidingDay | None) -> dict:
             }
             for b in branches
         ],
+        "fullness": fullness,
+        "days_dormant": days_dormant,
     }
 
 
 def _today(db: Session) -> AbidingDay | None:
     return db.scalar(select(AbidingDay).where(AbidingDay.day == date.today()))
+
+
+def _vine_state(db: Session) -> tuple[float, int | None]:
+    """The Vine's long memory, derived from history — never stored.
+
+    `fullness` (0..1) is a recency-decay-weighted sense of how faithfully the Pastor has tended
+    over the recent window: each day he *tended* (≥1 tended branch) adds `exp(-age/TAU)`, divided
+    by the same sum over every day in the window (the "tended every day" maximum). Faithful daily
+    tending nears 1; a rough patch recovers as tending resumes; long-ago tending fades out.
+
+    `days_dormant` is calendar days since the last tended day (0 = tended today, None = never).
+    Neglect is honest but never fatal — the glyph reads this as sleep, not death.
+    """
+    today = date.today()
+    cutoff = today - timedelta(days=_FULLNESS_WINDOW - 1)
+    # The set of recent days that were actually tended (a plan alone is not tending).
+    tended_days = set(
+        db.scalars(
+            select(AbidingDay.day)
+            .join(AbidingBranch, AbidingBranch.abiding_day_id == AbidingDay.id)
+            .where(AbidingBranch.tended.is_(True), AbidingDay.day >= cutoff)
+            .distinct()
+        ).all()
+    )
+
+    normalizer = sum(math.exp(-d / _FULLNESS_TAU) for d in range(_FULLNESS_WINDOW))
+    raw = sum(math.exp(-((today - d).days) / _FULLNESS_TAU) for d in tended_days)
+    fullness = min(1.0, raw / normalizer) if normalizer > 0 else 0.0
+
+    # Dormancy looks past the window — the last tended day, however long ago.
+    last_tended = db.scalar(
+        select(AbidingDay.day)
+        .join(AbidingBranch, AbidingBranch.abiding_day_id == AbidingDay.id)
+        .where(AbidingBranch.tended.is_(True))
+        .order_by(AbidingDay.day.desc())
+    )
+    days_dormant = (today - last_tended).days if last_tended is not None else None
+
+    return round(fullness, 4), days_dormant
+
+
+def _view(db: Session) -> dict:
+    """The full Vine payload for today — the day's tending plus the long state."""
+    fullness, days_dormant = _vine_state(db)
+    return _serialize(_today(db), fullness, days_dormant)
 
 
 def _get_or_open_today(db: Session) -> AbidingDay:
@@ -63,7 +115,7 @@ def _get_or_open_today(db: Session) -> AbidingDay:
 
 def today_abiding(db: Session) -> dict:
     """Read today's tending. Does not open a day — silence before the first act stays silent."""
-    return _serialize(_today(db))
+    return _view(db)
 
 
 def set_plan(db: Session, branches: list[str]) -> dict:
@@ -78,7 +130,7 @@ def set_plan(db: Session, branches: list[str]) -> dict:
     day = _get_or_open_today(db)
     day.planned_branches = ",".join(chosen)
     db.commit()
-    return _serialize(_today(db))
+    return _view(db)
 
 
 def tend(db: Session, branch: str, seconds: int) -> dict:
@@ -130,4 +182,4 @@ def tend(db: Session, branch: str, seconds: int) -> dict:
         existing.seconds += seconds
         existing.tended = True
         db.commit()
-    return _serialize(_today(db))
+    return _view(db)

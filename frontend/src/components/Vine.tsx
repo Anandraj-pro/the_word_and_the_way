@@ -190,7 +190,13 @@ export function Vine() {
   return (
     <section className="mb-5 rounded-sm border border-stone/15 bg-linen-deep/30 px-4 py-4">
       <div className="flex items-start gap-4">
-        <VineGlyph byBranch={byBranch} planned={today.planned_branches} active={active} />
+        <VineGlyph
+          byBranch={byBranch}
+          planned={today.planned_branches}
+          active={active}
+          fullness={today.fullness}
+          daysDormant={today.days_dormant}
+        />
 
         <div className="min-w-0 flex-1">
           <p className="mb-1 text-[0.65rem] uppercase tracking-[0.3em] text-stone/60">The Vine</p>
@@ -205,6 +211,15 @@ export function Vine() {
               The branches wait, bare. Begin to abide.
             </p>
           )}
+
+          {/* The long season, told as the plant's condition — never a count. */}
+          {today.days_dormant !== null && today.days_dormant >= 3 ? (
+            <p className="mb-2 font-serif text-xs italic text-stone/60">
+              The Vine has been resting — tend a branch to wake it.
+            </p>
+          ) : today.fullness >= 0.66 ? (
+            <p className="mb-2 font-serif text-xs italic text-stone/60">Grown full this season.</p>
+          ) : null}
 
           {sealed !== null && (
             <p className="settle mb-2 font-serif text-sm text-terracotta">
@@ -288,25 +303,39 @@ export function Vine() {
 
 /**
  * The living glyph — an ink-drawn vine whose branches come to leaf as they are tended, each
- * leaf sized by its linger. Bare where untended, brighter where the abiding rests now. Raw
- * hex is used here, inside the SVG scene, as the room's conventions allow.
+ * leaf sized by its linger. Over days it carries a longer memory: `fullness` makes the whole
+ * plant read more established (taller, thicker, lusher), and long neglect (`daysDormant`) lets
+ * it settle into sleep — muted, waiting — never withered or dead. Raw hex is used here, inside
+ * the SVG scene, as the room's conventions allow.
  */
 function VineGlyph({
   byBranch,
   planned,
   active,
+  fullness,
+  daysDormant,
 }: {
   byBranch: Map<BranchKey, AbidingBranch>;
   planned: BranchKey[];
   active: BranchKey | null;
+  fullness: number; // 0..1 — the plant's long stature
+  daysDormant: number | null; // days since last tending; high → sleep
 }) {
-  // Growth from linger — a gentle, bounded curve so a long prayer reads as a fuller leaf.
+  // Growth from today's linger — a gentle, bounded curve so a long prayer reads as a fuller leaf.
   const grow = (key: BranchKey) => {
     const b = byBranch.get(key);
     if (!b || !b.tended) return 0;
     return Math.min(1, 0.35 + b.seconds / 1200); // ~20 min approaches full
   };
   const shown = (key: BranchKey) => byBranch.get(key)?.tended || planned.includes(key);
+
+  // The long season: fullness lends the whole plant vigour and height; days away let it sleep.
+  const vigor = 0.7 + 0.3 * fullness; // lushness multiplier over the per-branch grow
+  const stemW = 2 + fullness * 1.8; // a faithful Vine has a thicker trunk
+  const crownY = 40 - fullness * 8; // …and reaches higher
+  const sleep = daysDormant == null ? 0 : Math.min(1, Math.max(0, (daysDormant - 2) / 5)); // awake ≤2d, asleep ~7d
+  const wake = 1 - 0.5 * sleep; // a sleeping Vine is muted, waiting — never gone
+  const droop = sleep * 5; // and settles gently downward
 
   const ink = "#2c2420";
   const terracotta = "#c4643d";
@@ -317,65 +346,67 @@ function VineGlyph({
 
   return (
     <svg viewBox="0 0 120 120" className="h-24 w-24 shrink-0" role="img" aria-label="the day's Vine">
-      {/* Soil — the Confession branch: the ground darkens as it is turned. */}
-      {shown("confession") && (
-        <line
-          x1="24"
-          y1="104"
-          x2="96"
-          y2="104"
-          stroke={leafColor("confession")}
-          strokeWidth={2 + grow("confession") * 4}
-          strokeLinecap="round"
-          opacity={byBranch.get("confession")?.tended ? 0.85 : 0.3}
-        />
-      )}
-      {/* Roots — the Prayer branch: drinking deeper the longer it is tended. */}
-      {shown("prayer") && (
-        <g
-          stroke={leafColor("prayer")}
-          strokeWidth="1.5"
-          fill="none"
-          opacity={byBranch.get("prayer")?.tended ? 0.85 : 0.3}
-          strokeLinecap="round"
-        >
-          <path d={`M60 104 C 52 ${108 + grow("prayer") * 8}, 44 ${110 + grow("prayer") * 6}, 40 ${112 + grow("prayer") * 8}`} />
-          <path d={`M60 104 C 68 ${108 + grow("prayer") * 8}, 76 ${110 + grow("prayer") * 6}, 80 ${112 + grow("prayer") * 8}`} />
-        </g>
-      )}
-
-      {/* The stem — always there, the one plant. */}
-      <path d="M60 104 C 58 84, 62 66, 60 40" stroke={ink} strokeWidth="2" fill="none" strokeLinecap="round" />
-
-      {/* Word — the leaves, reaching for the light (upper left). */}
-      {shown("word") && (
-        <g opacity={halo("word")}>
-          <path d="M60 62 C 52 60, 44 56, 40 50" stroke={ink} strokeWidth="1.3" fill="none" />
-          <ellipse
-            cx="37"
-            cy="48"
-            rx={4 + grow("word") * 9}
-            ry={2.5 + grow("word") * 5}
-            transform="rotate(-32 37 48)"
-            fill={leafColor("word")}
-            opacity={byBranch.get("word")?.tended ? 0.9 : 0.3}
+      <g opacity={wake} transform={`translate(0 ${droop})`}>
+        {/* Soil — the Confession branch: the ground darkens as it is turned. */}
+        {shown("confession") && (
+          <line
+            x1="24"
+            y1="104"
+            x2="96"
+            y2="104"
+            stroke={leafColor("confession")}
+            strokeWidth={2 + grow("confession") * 4 * vigor}
+            strokeLinecap="round"
+            opacity={byBranch.get("confession")?.tended ? 0.85 : 0.3}
           />
-        </g>
-      )}
+        )}
+        {/* Roots — the Prayer branch: drinking deeper the longer it is tended. */}
+        {shown("prayer") && (
+          <g
+            stroke={leafColor("prayer")}
+            strokeWidth="1.5"
+            fill="none"
+            opacity={byBranch.get("prayer")?.tended ? 0.85 : 0.3}
+            strokeLinecap="round"
+          >
+            <path d={`M60 104 C 52 ${108 + grow("prayer") * 8 * vigor}, 44 ${110 + grow("prayer") * 6 * vigor}, 40 ${112 + grow("prayer") * 8 * vigor}`} />
+            <path d={`M60 104 C 68 ${108 + grow("prayer") * 8 * vigor}, 76 ${110 + grow("prayer") * 6 * vigor}, 80 ${112 + grow("prayer") * 8 * vigor}`} />
+          </g>
+        )}
 
-      {/* Freestyle — new growth, a bud at the crown (upper right). */}
-      {shown("freestyle") && (
-        <g opacity={halo("freestyle")}>
-          <path d="M60 52 C 68 50, 76 46, 80 40" stroke={ink} strokeWidth="1.3" fill="none" />
-          <circle
-            cx="82"
-            cy="38"
-            r={3 + grow("freestyle") * 7}
-            fill={leafColor("freestyle")}
-            opacity={byBranch.get("freestyle")?.tended ? 0.9 : 0.3}
-          />
-        </g>
-      )}
+        {/* The stem — always there, the one plant; taller and thicker as the Vine grows full. */}
+        <path d={`M60 104 C 58 84, 62 66, 60 ${crownY}`} stroke={ink} strokeWidth={stemW} fill="none" strokeLinecap="round" />
+
+        {/* Word — the leaves, reaching for the light (upper left). */}
+        {shown("word") && (
+          <g opacity={halo("word")}>
+            <path d="M60 62 C 52 60, 44 56, 40 50" stroke={ink} strokeWidth="1.3" fill="none" />
+            <ellipse
+              cx="37"
+              cy="48"
+              rx={4 + grow("word") * 9 * vigor}
+              ry={2.5 + grow("word") * 5 * vigor}
+              transform="rotate(-32 37 48)"
+              fill={leafColor("word")}
+              opacity={byBranch.get("word")?.tended ? 0.9 : 0.3}
+            />
+          </g>
+        )}
+
+        {/* Freestyle — new growth, a bud at the crown (upper right). */}
+        {shown("freestyle") && (
+          <g opacity={halo("freestyle")}>
+            <path d="M60 52 C 68 50, 76 46, 80 40" stroke={ink} strokeWidth="1.3" fill="none" />
+            <circle
+              cx="82"
+              cy="38"
+              r={3 + grow("freestyle") * 7 * vigor}
+              fill={leafColor("freestyle")}
+              opacity={byBranch.get("freestyle")?.tended ? 0.9 : 0.3}
+            />
+          </g>
+        )}
+      </g>
     </svg>
   );
 }

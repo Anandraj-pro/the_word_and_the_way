@@ -241,6 +241,11 @@ class AbidingToday(BaseModel):
     has_plan: bool
     planned_branches: list[str]  # the morning compass
     branches: list[AbidingBranchRead]
+    # The Vine's long memory, derived from history (never stored). `fullness` (0..1) is how
+    # faithfully it has been tended lately; `days_dormant` is days since the last tending
+    # (0 today, None if never) — the glyph reads a high value as sleep, never death.
+    fullness: float = 0.0
+    days_dormant: int | None = None
 
 
 class AbidingPlan(BaseModel):

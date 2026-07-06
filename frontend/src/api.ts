@@ -184,12 +184,14 @@ export interface AbidingBranch {
   first_touched_at: string | null;
 }
 
-/** Today's Vine — the morning's plan and each branch's tending. */
+/** Today's Vine — the morning's plan, each branch's tending, and the plant's long memory. */
 export interface AbidingToday {
   day: string;
   has_plan: boolean;
   planned_branches: AbidingBranch["branch"][];
   branches: AbidingBranch[];
+  fullness: number; // 0..1 — how faithfully tended lately (derived, never a streak)
+  days_dormant: number | null; // days since last tending: 0 today, null if never
 }
 
 async function http<T>(path: string, init?: RequestInit): Promise<T> {
