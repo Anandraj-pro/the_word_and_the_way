@@ -217,7 +217,7 @@ export function Vine() {
             <p className="mb-2 font-serif text-xs italic text-stone/60">
               The Vine has been resting — tend a branch to wake it.
             </p>
-          ) : today.fullness >= 0.66 ? (
+          ) : today.fullness >= 0.5 ? (
             <p className="mb-2 font-serif text-xs italic text-stone/60">Grown full this season.</p>
           ) : null}
 
@@ -330,7 +330,7 @@ function VineGlyph({
   const shown = (key: BranchKey) => byBranch.get(key)?.tended || planned.includes(key);
 
   // The long season: fullness lends the whole plant vigour and height; days away let it sleep.
-  const vigor = 0.7 + 0.3 * fullness; // lushness multiplier over the per-branch grow
+  const vigor = 0.82 + 0.18 * fullness; // lushness multiplier — today's leaf always reads, fullness adds to it
   const stemW = 2 + fullness * 1.8; // a faithful Vine has a thicker trunk
   const crownY = 40 - fullness * 8; // …and reaches higher
   const sleep = daysDormant == null ? 0 : Math.min(1, Math.max(0, (daysDormant - 2) / 5)); // awake ≤2d, asleep ~7d

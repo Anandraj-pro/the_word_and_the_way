@@ -61,12 +61,17 @@ def _vine_state(db: Session) -> tuple[float, int | None]:
     """
     today = date.today()
     cutoff = today - timedelta(days=_FULLNESS_WINDOW - 1)
-    # The set of recent days that were actually tended (a plan alone is not tending).
+    # The set of recent days that were actually tended (a plan alone is not tending). Bounded
+    # to today so a stray future-dated row (clock skew) can't inflate the sum past its weight.
     tended_days = set(
         db.scalars(
             select(AbidingDay.day)
             .join(AbidingBranch, AbidingBranch.abiding_day_id == AbidingDay.id)
-            .where(AbidingBranch.tended.is_(True), AbidingDay.day >= cutoff)
+            .where(
+                AbidingBranch.tended.is_(True),
+                AbidingDay.day >= cutoff,
+                AbidingDay.day <= today,
+            )
             .distinct()
         ).all()
     )
@@ -75,12 +80,13 @@ def _vine_state(db: Session) -> tuple[float, int | None]:
     raw = sum(math.exp(-((today - d).days) / _FULLNESS_TAU) for d in tended_days)
     fullness = min(1.0, raw / normalizer) if normalizer > 0 else 0.0
 
-    # Dormancy looks past the window — the last tended day, however long ago.
+    # Dormancy looks past the window — the last tended day, however long ago (but not the future).
     last_tended = db.scalar(
         select(AbidingDay.day)
         .join(AbidingBranch, AbidingBranch.abiding_day_id == AbidingDay.id)
-        .where(AbidingBranch.tended.is_(True))
+        .where(AbidingBranch.tended.is_(True), AbidingDay.day <= today)
         .order_by(AbidingDay.day.desc())
+        .limit(1)
     )
     days_dormant = (today - last_tended).days if last_tended is not None else None
 
