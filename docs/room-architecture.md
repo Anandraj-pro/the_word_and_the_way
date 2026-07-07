@@ -79,6 +79,16 @@ Not twelve nav items. Five places in one room. **You enter facing the Altar.**
 
 The corpus in `docs/confessions_md/` (50+ files) populates **The Wall** on day one.
 
+**The realized room is one continuous scroll, not a 2-D grid.** The diagram shows the
+*relationship* — you face the Altar, the others frame it. In the running app the five
+stations descend one page, **Altar → Desk → Shelves → Wall → Window** (the Desk sits
+first after the Altar — it is the daily act): all always mounted (an empty station is
+**dim, never removed**), with navigation visible at rest — a ceiling bar of station names
+on desktop, a floor bar of station glyphs in hand. The July 2026 review
+([`design-review-2026-07.md`](design-review-2026-07.md)) restored this after the build had
+drifted into five hidden pages behind a hover-only nav; its §4 — **seven binding UI
+principles** — now governs any change to the room.
+
 ### The Vine — the Desk's daily rhythm (not a sixth station)
 
 At the Desk sits **the Vine**: one living plant the Pastor **abides** in each morning, tending
@@ -97,7 +107,8 @@ The previous version felt incoherent because three rival systems fought each oth
 
 - **One navigation, not three.** Sacred Compass / Three-Watch / Progressive Revelation were
   competing nav paradigms. They are now **lighting on one room, not navigation:**
-  - *Spatial layout* = the room (permanent, always the five stations).
+  - *The room itself* = one continuous scroll, all five stations always present (permanent
+    furniture — never routed pages).
   - *Three-Watch & Seasonal Skin* = **how the room is lit** (palette/typography shift by hour
     and season) — never moves the furniture.
   - *Progressive Revelation* = **stations fade in as you have data** — but the room is always
