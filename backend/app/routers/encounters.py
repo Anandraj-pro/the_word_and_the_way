@@ -131,7 +131,21 @@ def update_encounter(
     encounter = db.get(Encounter, encounter_id)
     if encounter is None:
         raise HTTPException(404, "Encounter not found")
-    for field, value in payload.model_dump(exclude_unset=True).items():
+    updates = payload.model_dump(exclude_unset=True)
+    # A witnessed word has reached the end of the path — it does not walk back. Guard the
+    # one regression this generic PATCH would otherwise allow (witnessed -> received/
+    # reflecting), now that two surfaces — the Desk and the Altar's kept promises — can
+    # witness. Re-witnessing (witnessed -> witnessed, e.g. editing the testimony) is fine,
+    # and a kept cornerstone keeps its carry_count/is_cornerstone, so it still rests on
+    # both the Altar and the Window.
+    new_stage = updates.get("stage")
+    if (
+        encounter.stage == Stage.witnessed
+        and new_stage is not None
+        and new_stage != Stage.witnessed
+    ):
+        raise HTTPException(409, "A witnessed word cannot be un-witnessed.")
+    for field, value in updates.items():
         setattr(encounter, field, value)
     db.commit()
     db.refresh(encounter)
