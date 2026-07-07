@@ -46,13 +46,6 @@ export function RoomTour({ hasShelves, hasWindow, onRequestEnter, onClose }: Roo
         body:
           "Your daily rhythm: read the Word, keep the watch, and write down what God is saying. Every word you receive begins its journey here.",
       },
-      {
-        anchor: "station-wall",
-        eyebrow: "Declarations",
-        title: "The Wall",
-        body:
-          "Scripture to speak out loud over your life — declarations to hold to the light and pray back to God.",
-      },
     ];
     if (hasShelves)
       walk.push({
@@ -62,6 +55,13 @@ export function RoomTour({ hasShelves, hasWindow, onRequestEnter, onClose }: Roo
         body:
           "Time kept as seasons. Open a season's spine to read what it held — the words received, wrestled, and declared in it, and what God has already brought to a close.",
       });
+    walk.push({
+      anchor: "station-wall",
+      eyebrow: "Declarations",
+      title: "The Wall",
+      body:
+        "Scripture to speak out loud over your life — declarations to hold to the light and pray back to God.",
+    });
     if (hasWindow)
       walk.push({
         anchor: "station-window",

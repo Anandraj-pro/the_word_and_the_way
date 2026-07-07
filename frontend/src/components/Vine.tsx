@@ -171,13 +171,20 @@ export function Vine() {
             </button>
           ))}
         </div>
-        <button
-          onClick={plant}
-          disabled={picking.size === 0 || saving}
-          className="rounded-sm bg-terracotta px-4 py-1.5 font-serif text-sm text-linen transition-colors hover:bg-terracotta-deep disabled:opacity-40"
-        >
-          {saving ? "planting…" : "Plant the day"}
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={plant}
+            disabled={picking.size === 0 || saving}
+            className="rounded-sm bg-terracotta px-4 py-1.5 font-serif text-sm text-linen transition-colors hover:bg-terracotta-deep disabled:opacity-40"
+          >
+            {saving ? "planting…" : "Plant the day"}
+          </button>
+          {picking.size === 0 && !saving && (
+            <p className="font-serif text-xs italic text-stone/60">
+              choose a branch or two above, then plant
+            </p>
+          )}
+        </div>
       </section>
     );
   }

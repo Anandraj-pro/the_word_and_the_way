@@ -250,8 +250,8 @@ function AccordionItem({ item, isActive, onMouseEnter, onSelect }: AccordionItem
         focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta
         ${
           isActive
-            ? "w-[72vw] max-w-[360px] border-terracotta/60 sm:w-[360px]"
-            : "w-[46px] border-stone/30 sm:w-[56px]"
+            ? "w-[72vw] max-w-[360px] border-terracotta/60 sm:w-[300px]"
+            : "w-[46px] border-stone/30 sm:w-[52px]"
         }
       `}
     >
@@ -292,15 +292,66 @@ function AccordionItem({ item, isActive, onMouseEnter, onSelect }: AccordionItem
         </p>
       </div>
 
-      {/* Closed caption — the station's name turned on its side */}
+      {/* Closed caption — the station's name turned on its side, never clipped */}
       <span
-        className={`absolute bottom-20 left-1/2 origin-center -translate-x-1/2 rotate-90 whitespace-nowrap font-display text-lg tracking-wide text-linen/90 transition-opacity duration-300 ${
+        className={`absolute inset-0 flex items-center justify-end pb-6 font-display text-lg tracking-wide text-linen/90 transition-opacity duration-300 [writing-mode:vertical-rl] ${
           isActive ? "opacity-0" : "opacity-100"
         }`}
       >
         {item.title}
       </span>
     </button>
+  );
+}
+
+// --- A small line-drawn glyph of each station, for the bars. ---
+export function StationGlyph({ motif, className = "" }: { motif: Motif; className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden
+    >
+      {motif === "altar" && (
+        <>
+          <path d="M12 3c-1.6 2.2-.8 3.6 0 4.8.8-1.2 1.6-2.6 0-4.8Z" fill="currentColor" stroke="none" />
+          <path d="M12 9v4" />
+          <rect x="5" y="16" width="14" height="4" rx="1" />
+        </>
+      )}
+      {motif === "desk" && (
+        <>
+          <path d="M12 6C9.8 4.9 7.4 4.9 5 6v12c2.4-1.1 4.8-1.1 7 0 2.2-1.1 4.6-1.1 7 0V6c-2.4-1.1-4.8-1.1-7 0Z" />
+          <path d="M12 6v12" />
+        </>
+      )}
+      {motif === "shelves" && (
+        <>
+          <path d="M4 20h16" />
+          <rect x="6" y="8" width="3" height="12" />
+          <rect x="10.5" y="5" width="3" height="15" />
+          <rect x="15" y="10" width="3" height="10" />
+        </>
+      )}
+      {motif === "wall" && (
+        <>
+          <path d="M4 6h16v14H4Z" />
+          <path d="M4 11h16M4 16h16" />
+          <path d="M12 6v5M8 11v5M16 11v5M12 16v4" />
+        </>
+      )}
+      {motif === "window" && (
+        <>
+          <path d="M7 20v-9a5 5 0 0 1 10 0v9" />
+          <path d="M12 7v13M7 14h10M5 20h14" />
+        </>
+      )}
+    </svg>
   );
 }
 
@@ -313,17 +364,14 @@ interface RoomThresholdProps {
   onHome: () => void;
   /** Open the guided walk through the room. */
   onTour?: () => void;
-  /** Anchors currently in view — these stay lit; the rest recede. */
+  /** Anchors currently in view — these stay lit; the rest rest quietly. */
   active?: ReadonlySet<string>;
 }
 
-// --- The collapsed entrance: a slim, sticky bar once you've entered the room. ---
-// Carries the room's name (click to re-open the threshold) and quick-nav to each
-// station. Only the station you're standing in shows; the others collapse out of
-// the bar entirely, sliding back open when you hover it (or tab to one).
+// --- The slim, sticky bar along the room's ceiling. ---
+// Every station is always in reach — nothing necessary hides behind a hover.
+// The station you stand nearest stays lit; the rest wait, visible, in linen.
 export function RoomThreshold({ items = STATIONS, onGo, onHome, onTour, active }: RoomThresholdProps) {
-  // When nothing is in view yet, show every link so the bar is never empty.
-  const showAll = !items.some((it) => active?.has(it.anchor));
   return (
     <header className="sticky top-0 z-40 border-b border-stone/20 bg-ink/90 backdrop-blur supports-[backdrop-filter]:bg-ink/75">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-2.5">
@@ -331,64 +379,90 @@ export function RoomThreshold({ items = STATIONS, onGo, onHome, onTour, active }
           type="button"
           onClick={onHome}
           aria-label="Return to the Altar"
-          className="group flex items-center gap-2"
+          className="group flex min-w-0 items-center gap-2"
         >
           <span className="text-terracotta">✦</span>
-          <span className="font-display text-base tracking-wide text-linen">
+          <span className="truncate font-display text-base tracking-wide text-linen">
             The Word and the Way
-          </span>
-          <span className="text-[0.65rem] uppercase tracking-[0.2em] text-stone opacity-0 transition-opacity group-hover:opacity-100">
-            ↑ the Altar
           </span>
         </button>
         <div className="flex items-center gap-3">
-        <nav className="group/nav hidden items-center sm:flex">
-          {items.map((it) => {
-            const isActive = active?.has(it.anchor) ?? false;
-            const expanded = isActive || showAll;
-            return (
-              <button
-                key={it.id}
-                type="button"
-                onClick={() => onGo(it.anchor)}
-                aria-current={isActive ? "true" : undefined}
-                className={`
-                  relative overflow-hidden whitespace-nowrap rounded-sm py-1 font-serif text-sm
-                  transition-all duration-300 ease-in-out
-                  hover:bg-terracotta/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta
-                  ${
-                    isActive
-                      ? "max-w-[13rem] px-2.5 text-terracotta opacity-100"
-                      : expanded
-                        ? "max-w-[13rem] px-2.5 text-linen/70 opacity-100 hover:text-linen"
-                        : // collapsed out — reopens on bar hover or keyboard focus
-                          "max-w-0 px-0 text-linen/70 opacity-0 hover:text-linen group-hover/nav:max-w-[13rem] group-hover/nav:px-2.5 group-hover/nav:opacity-100 focus-visible:max-w-[13rem] focus-visible:px-2.5 focus-visible:opacity-100"
-                  }
-                `}
-              >
-                <span className="opacity-60">{it.title.replace(/^The\s+/, "")} · </span>
-                {it.nav}
-                <span
-                  className={`absolute inset-x-2.5 -bottom-px h-px bg-terracotta transition-opacity duration-300 ${
-                    isActive ? "opacity-100" : "opacity-0"
+          <nav className="hidden items-center gap-0.5 sm:flex" aria-label="The stations">
+            {items.map((it) => {
+              const isActive = active?.has(it.anchor) ?? false;
+              return (
+                <button
+                  key={it.id}
+                  type="button"
+                  onClick={() => onGo(it.anchor)}
+                  aria-current={isActive ? "true" : undefined}
+                  title={`${it.title} — ${it.subtitle.toLowerCase()}`}
+                  className={`relative whitespace-nowrap rounded-sm px-2.5 py-1 font-serif text-sm transition-colors hover:bg-terracotta/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta ${
+                    isActive ? "text-terracotta" : "text-linen/70 hover:text-linen"
                   }`}
-                />
-              </button>
-            );
-          })}
-        </nav>
-        {onTour && (
-          <button
-            type="button"
-            onClick={onTour}
-            className="whitespace-nowrap rounded-sm border border-stone/30 px-2.5 py-1 font-serif text-xs text-stone transition-colors hover:border-terracotta hover:text-terracotta focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta"
-          >
-            ✦ Take a walk
-          </button>
-        )}
+                >
+                  {it.title.replace(/^The\s+/, "")}
+                  <span
+                    className={`absolute inset-x-2.5 -bottom-px h-px bg-terracotta transition-opacity duration-300 ${
+                      isActive ? "opacity-100" : "opacity-0"
+                    }`}
+                  />
+                </button>
+              );
+            })}
+          </nav>
+          {onTour && (
+            <button
+              type="button"
+              onClick={onTour}
+              className="whitespace-nowrap rounded-sm border border-stone/30 px-2.5 py-1 font-serif text-xs text-stone transition-colors hover:border-terracotta hover:text-terracotta focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta"
+            >
+              ✦ Take a walk
+            </button>
+          )}
         </div>
       </div>
     </header>
+  );
+}
+
+interface StationBarProps {
+  items?: StationPanel[];
+  onGo: (anchor: string) => void;
+  active?: ReadonlySet<string>;
+}
+
+// --- The station bar, in hand. ---
+// Below the sm breakpoint the ceiling bar has no room for five names, so the
+// stations sit under the thumb instead: five glyphs along the room's floor.
+export function StationBar({ items = STATIONS, onGo, active }: StationBarProps) {
+  return (
+    <nav
+      aria-label="The stations"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-stone/25 bg-ink/95 pb-[env(safe-area-inset-bottom)] backdrop-blur supports-[backdrop-filter]:bg-ink/85 sm:hidden"
+    >
+      <div className="mx-auto flex max-w-md items-stretch">
+        {items.map((it) => {
+          const isActive = active?.has(it.anchor) ?? false;
+          return (
+            <button
+              key={it.id}
+              type="button"
+              onClick={() => onGo(it.anchor)}
+              aria-current={isActive ? "true" : undefined}
+              className={`flex min-w-0 flex-1 flex-col items-center gap-1 px-1 pb-2 pt-2.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta ${
+                isActive ? "text-terracotta" : "text-linen/60"
+              }`}
+            >
+              <StationGlyph motif={it.motif} className="h-5 w-5" />
+              <span className="text-[0.58rem] uppercase tracking-[0.14em]">
+                {it.title.replace(/^The\s+/, "")}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </nav>
   );
 }
 
@@ -449,9 +523,10 @@ export function RoomAccordion({ items = STATIONS, initialIndex = 1, onEnter, onT
           )}
         </div>
 
-        {/* Right: the stations, side by side */}
-        <div className="w-full lg:w-[58%]">
-          <div className="flex flex-row items-center justify-start gap-2.5 overflow-x-auto p-1 sm:justify-center sm:gap-3">
+        {/* Right: the stations, side by side. w-max + auto margins centre the row
+            when it fits and keep its start reachable when it must scroll. */}
+        <div className="w-full overflow-x-auto lg:w-[58%]">
+          <div className="mx-auto flex w-max flex-row items-center gap-2.5 p-1 sm:gap-3">
             {items.map((item, index) => (
               <AccordionItem
                 key={item.id}

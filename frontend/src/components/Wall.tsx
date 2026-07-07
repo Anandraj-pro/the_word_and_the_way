@@ -18,6 +18,89 @@ const cleanProse = (s: string) =>
     .replace(/^#{1,6}\s*/gm, "")
     .trim();
 
+// Short enough to speak in one breath — set large, like a line carved on the wall.
+// Anything longer is prose, and prose is set to be read: serif, measured, in paragraphs.
+const ONE_BREATH = 160;
+
+function DeclarationCard({
+  d,
+  mustered,
+  onToggleMuster,
+}: {
+  d: Encounter;
+  mustered: boolean;
+  onToggleMuster: () => void;
+}) {
+  const text = cleanProse(d.words || d.scripture_text || "");
+  const isLine = text.length <= ONE_BREATH;
+  const [unrolled, setUnrolled] = useState(false);
+  const paragraphs = text.split(/\n{2,}/).filter((p) => p.trim());
+
+  const musterButton = (
+    <button
+      onClick={onToggleMuster}
+      aria-label={mustered ? "Remove from War Room" : "Add to War Room"}
+      aria-pressed={mustered}
+      title={mustered ? "In the War Room" : "Take to the War Room"}
+      className={`absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full text-xs leading-none transition-colors ${
+        isLine
+          ? mustered
+            ? "bg-linen text-terracotta-deep"
+            : "bg-linen/20 text-linen hover:bg-linen/35"
+          : mustered
+            ? "bg-terracotta text-linen"
+            : "bg-stone/15 text-stone hover:bg-terracotta/20 hover:text-terracotta"
+      }`}
+    >
+      {mustered ? "✓" : "+"}
+    </button>
+  );
+
+  if (isLine) {
+    return (
+      <div className="relative rounded-sm bg-terracotta px-4 py-3 text-linen shadow-sm">
+        <p className="max-w-[40ch] pr-6 font-display text-base leading-snug">{text}</p>
+        {d.scripture && (
+          <p className="mt-1 text-xs uppercase tracking-[0.2em] text-linen/75">{d.scripture}</p>
+        )}
+        {musterButton}
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative rounded-sm border border-stone/20 border-l-2 border-l-terracotta bg-linen-deep/40 px-4 py-3">
+      <div
+        className={`relative flex flex-col gap-2.5 pr-6 ${unrolled ? "" : "max-h-36 overflow-hidden"}`}
+      >
+        {paragraphs.map((para, i) => (
+          <p key={i} className="max-w-[65ch] whitespace-pre-line font-serif text-[0.95rem] leading-relaxed text-ink">
+            {para}
+          </p>
+        ))}
+        {!unrolled && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[#ece5d8] to-transparent"
+          />
+        )}
+      </div>
+      <div className="mt-2 flex items-baseline justify-between gap-3">
+        <button
+          onClick={() => setUnrolled((u) => !u)}
+          className="font-serif text-xs italic text-terracotta underline decoration-terracotta/40 underline-offset-2 transition-colors hover:text-terracotta-deep"
+        >
+          {unrolled ? "Roll it up" : "Unroll — read it whole"}
+        </button>
+        {d.scripture && (
+          <p className="text-xs uppercase tracking-[0.2em] text-stone/70">{d.scripture}</p>
+        )}
+      </div>
+      {musterButton}
+    </div>
+  );
+}
+
 interface WallProps {
   declarations: Encounter[];
   confessions: ConfessionSummary[];
@@ -195,44 +278,21 @@ export function Wall({ declarations, confessions, cornerstones, onKeep }: WallPr
         )}
 
         {/* The Pastor's own declarations, proclaimed in his own words. */}
-        {declarations.map((d) => {
-          const mustered = isMustered("declaration", d.id);
-          return (
-            <div
-              key={d.id}
-              className="relative rounded-sm bg-terracotta px-4 py-3 text-linen shadow-sm"
-            >
-              <p className="pr-6 font-display text-base leading-snug">
-                {cleanProse(d.words || d.scripture_text || "")}
-              </p>
-              {d.scripture && (
-                <p className="mt-1 text-xs uppercase tracking-[0.2em] text-linen/75">
-                  {d.scripture}
-                </p>
-              )}
-              <button
-                onClick={() =>
-                  toggleMuster({
-                    kind: "declaration",
-                    id: d.id,
-                    title: cleanProse(d.words || d.scripture_text || d.scripture || ""),
-                    scripture: d.scripture,
-                  })
-                }
-                aria-label={mustered ? "Remove from War Room" : "Add to War Room"}
-                aria-pressed={mustered}
-                title={mustered ? "In the War Room" : "Take to the War Room"}
-                className={`absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full text-xs leading-none transition-colors ${
-                  mustered
-                    ? "bg-linen text-terracotta-deep"
-                    : "bg-linen/20 text-linen hover:bg-linen/35"
-                }`}
-              >
-                {mustered ? "✓" : "+"}
-              </button>
-            </div>
-          );
-        })}
+        {declarations.map((d) => (
+          <DeclarationCard
+            key={d.id}
+            d={d}
+            mustered={isMustered("declaration", d.id)}
+            onToggleMuster={() =>
+              toggleMuster({
+                kind: "declaration",
+                id: d.id,
+                title: cleanProse(d.words || d.scripture_text || d.scripture || ""),
+                scripture: d.scripture,
+              })
+            }
+          />
+        ))}
 
         {/* The inherited corpus — a library to read and declare from. */}
         {confessions.length > 0 && (

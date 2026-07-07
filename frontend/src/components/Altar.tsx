@@ -14,15 +14,42 @@ interface AltarProps {
   watch?: { streak: number };
   /** When provided, a carried promise can be witnessed — "God kept it." */
   onWitness?: (id: number, words: string) => void | Promise<void>;
+  /** Walk to the Desk — where the counted things actually live. */
+  onGoToDesk?: () => void;
 }
 
-/** One figure on the dashboard — a number and what it counts. */
-function Stat({ value, label }: { value: ReactNode; label: string }) {
-  return (
-    <div className="text-center">
+/** One figure on the dashboard — a number, what it counts, and where it leads. */
+function Stat({
+  value,
+  label,
+  hint,
+  onGo,
+}: {
+  value: ReactNode;
+  label: string;
+  /** One plain clause carrying the term's meaning, shown under the figure. */
+  hint: string;
+  onGo?: () => void;
+}) {
+  const figure = (
+    <>
       <div className="font-display text-2xl leading-none text-linen">{value}</div>
       <div className="mt-1.5 text-[0.6rem] uppercase tracking-[0.25em] text-stone">{label}</div>
-    </div>
+      <div className="mt-1 font-serif text-[0.68rem] italic leading-snug text-stone/70">{hint}</div>
+    </>
+  );
+  if (!onGo) return <div className="w-32 text-center">{figure}</div>;
+  return (
+    <button
+      type="button"
+      onClick={onGo}
+      className="group w-32 rounded-sm px-1 py-1 text-center transition-colors hover:bg-linen/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-terracotta"
+    >
+      {figure}
+      <span className="mt-0.5 block text-[0.6rem] uppercase tracking-[0.2em] text-terracotta opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+        to the Desk ↓
+      </span>
+    </button>
   );
 }
 
@@ -41,6 +68,7 @@ export function Altar({
   reading,
   watch,
   onWitness,
+  onGoToDesk,
 }: AltarProps) {
   const [bringing, setBringing] = useState("");
 
@@ -74,12 +102,35 @@ export function Altar({
         The Altar of Remembrance
       </p>
 
-      {/* The dashboard — progress at a glance. */}
-      <div className="relative mx-auto mt-9 flex max-w-4xl flex-wrap items-start justify-center gap-x-10 gap-y-4">
-        <Stat value={cornerstones.length} label="inscribed" />
-        <Stat value={wordsInFlight} label="carrying" />
-        {reading && <Stat value={`✦ ${reading.streak}`} label="in the word" />}
-        {watch && <Stat value={`✦ ${watch.streak}`} label="on watch" />}
+      {/* The dashboard — progress at a glance; every figure is a door. */}
+      <div className="relative mx-auto mt-9 flex max-w-4xl flex-wrap items-start justify-center gap-x-6 gap-y-4">
+        <Stat
+          value={cornerstones.length}
+          label="inscribed"
+          hint="promises set in stone below"
+        />
+        <Stat
+          value={wordsInFlight}
+          label="carrying"
+          hint="words on their way, at the Desk"
+          onGo={onGoToDesk}
+        />
+        {reading && (
+          <Stat
+            value={`✦ ${reading.streak}`}
+            label="in the word"
+            hint="days reading, kept at the Desk"
+            onGo={onGoToDesk}
+          />
+        )}
+        {watch && (
+          <Stat
+            value={`✦ ${watch.streak}`}
+            label="on watch"
+            hint="days praying the watch"
+            onGo={onGoToDesk}
+          />
+        )}
       </div>
 
       {/* The season, and the crossing into the next. */}
@@ -112,7 +163,11 @@ export function Altar({
             and it is inscribed here.
           </p>
         ) : (
-          cornerstones.map((c) => (
+          <>
+          <p className="-mb-3 text-center font-serif text-xs italic text-stone/70">
+            Words carried through three seasons, set in stone.
+          </p>
+          {cornerstones.map((c) => (
             <div key={c.id} className="settle text-center">
               <p
                 className={`font-display text-[1.7rem] leading-snug tracking-wide sm:text-[2.1rem] ${depth(
@@ -141,7 +196,8 @@ export function Altar({
                 )
               )}
             </div>
-          ))
+          ))}
+          </>
         )}
       </div>
 
@@ -153,15 +209,28 @@ export function Altar({
       </div>
 
       <form onSubmit={submit} className="relative mx-auto mt-8 max-w-xl">
-        <label className="block text-center font-serif text-lg text-linen/80">
+        <label htmlFor="threshold-line" className="block text-center font-serif text-lg text-linen/80">
           What are you bringing to God today?
         </label>
         <input
+          id="threshold-line"
           value={bringing}
           onChange={(e) => setBringing(e.target.value)}
           placeholder="Speak it…"
           className="mt-4 w-full border-b border-stone/40 bg-transparent pb-2.5 text-center font-serif text-xl text-linen placeholder:text-stone/55 focus:border-terracotta focus:outline-none"
         />
+        <div className="mt-3.5 flex flex-col items-center gap-1.5">
+          <button
+            type="submit"
+            disabled={!bringing.trim()}
+            className="rounded-sm border border-terracotta/50 px-4 py-1.5 font-serif text-sm text-terracotta transition-colors hover:border-terracotta hover:bg-terracotta/10 disabled:opacity-0 disabled:pointer-events-none"
+          >
+            Lay it down ↓
+          </button>
+          <p className="font-serif text-xs italic text-stone/70">
+            It becomes the open page at the Desk, ready to receive.
+          </p>
+        </div>
       </form>
     </section>
   );
