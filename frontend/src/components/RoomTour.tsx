@@ -137,17 +137,22 @@ export function RoomTour({ hasShelves, hasWindow, onRequestEnter, onClose }: Roo
     return () => window.removeEventListener("keydown", onKey);
   }, [isLast, next, back, onClose]);
 
-  // Place the card near the lit station (below if there is room, otherwise above).
+  // Place the card near the lit station: below if there is room, above if there is
+  // room there — and when the station fills the whole view (the Altar), rest the
+  // card on the viewport's floor so it is always readable.
   const vw = typeof window !== "undefined" ? window.innerWidth : 1024;
   const vh = typeof window !== "undefined" ? window.innerHeight : 768;
   const cardW = Math.min(360, vw - 32);
   let cardStyle: React.CSSProperties;
   if (rect) {
     const below = rect.bottom + 220 < vh;
+    const above = rect.top - 240 > 0;
     const left = Math.max(16, Math.min(rect.left + rect.width / 2 - cardW / 2, vw - cardW - 16));
     cardStyle = below
       ? { top: rect.bottom + 16, left, width: cardW }
-      : { top: rect.top - 16, left, width: cardW, transform: "translateY(-100%)" };
+      : above
+        ? { top: rect.top - 16, left, width: cardW, transform: "translateY(-100%)" }
+        : { bottom: 24, left, width: cardW };
   } else {
     cardStyle = { top: "50%", left: "50%", width: cardW, transform: "translate(-50%, -50%)" };
   }
@@ -176,8 +181,10 @@ export function RoomTour({ hasShelves, hasWindow, onRequestEnter, onClose }: Roo
       {/* Catch stray clicks so the room rests while the walk is open. */}
       <div className="absolute inset-0" />
 
-      <div className="settle fixed" style={cardStyle}>
-        <div className="relative rounded-sm border border-stone/30 bg-linen p-6 text-ink shadow-2xl shadow-black/40">
+      {/* Position on the wrapper, settle on the card — the animation's transform
+          must never fight the wrapper's centering translate. */}
+      <div className="fixed" style={cardStyle}>
+        <div className="settle relative rounded-sm border border-stone/30 bg-linen p-6 text-ink shadow-2xl shadow-black/40">
           <button
             type="button"
             onClick={onClose}
