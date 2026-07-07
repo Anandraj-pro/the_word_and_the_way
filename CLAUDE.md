@@ -37,7 +37,9 @@ setup details.
 - **Voice.** Code comments are sparse and written in the room's contemplative voice
   (e.g. "the wall you face on entry"). Match that register; don't add noisy boilerplate.
 - **Aesthetic.** "Ember & Stone" — terracotta / stone / linen / ink, with Abril Fatface
-  (display) + Source Serif 4 (body). Tokens live in `frontend/src/index.css`.
+  (display) + Source Serif 4 (body). Tokens live in `frontend/src/index.css`. UI work is
+  bound by the seven principles in `docs/design-review-2026-07.md` §4 (no hover-only
+  affordances; empty ≠ absent; display face sets names, never paragraphs; …).
 - **Don't commit artifacts.** `node_modules/`, `frontend/dist/`, `*.tsbuildinfo`,
   `_bmad-output/`, and the SQLite DB / `chroma_db/` are build/runtime artifacts — all
   covered by the root `.gitignore` (its `node_modules/` rule matches at any depth, so
